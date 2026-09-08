@@ -1,0 +1,2849 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İnteraktif Arapça Öğrenme Platformu</title>
+    <style>
+        :root {
+            --primary: #1e293b;
+            --accent: #10b981;
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            --card-bg: rgba(255, 255, 255, 0.96);
+            --selected: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-gradient);
+            background-attachment: fixed;
+            color: #334155;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 980px;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        header {
+            text-align: center;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+
+        header h2 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 1.8rem;
+            letter-spacing: -0.5px;
+        }
+
+        .level-control {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f1f5f9;
+            padding: 12px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+            border: 1px solid #cbd5e1;
+        }
+
+        select {
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid #cbd5e1;
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--primary);
+            background: white;
+        }
+
+        .badge {
+            background-color: var(--primary);
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+
+        .mode-btn {
+            padding: 10px 14px;
+            border: none;
+            background-color: #e2e8f0;
+            cursor: pointer;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 0.88rem;
+            transition: all 0.2s ease;
+            color: #334155;
+        }
+
+        .mode-btn:hover {
+            background-color: #cbd5e1;
+        }
+
+        .mode-btn.active {
+            background-color: var(--accent) !important;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .game-area {
+            min-height: 340px;
+            border: 2px dashed #cbd5e1;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.7);
+        }
+
+        .instruction-box {
+            font-weight: bold;
+            color: #c2410c;
+            margin-bottom: 15px;
+            font-size: 1.05rem;
+            text-align: center;
+            background: #fff7ed;
+            padding: 10px;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+            border: 1px solid #ffedd5;
+        }
+
+        .match-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .match-column {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .match-card {
+            position: relative;
+            padding: 14px;
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-size: 1.3rem;
+            transition: all 0.2s ease;
+            direction: rtl;
+            user-select: none;
+        }
+
+        .match-card.turkish {
+            direction: ltr;
+            font-size: 1.1rem;
+        }
+
+        .match-card.selected {
+            border-color: var(--selected) !important;
+            background-color: #fef3c7 !important;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+            z-index: 20;
+        }
+
+        .match-card.matched {
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .card-popup {
+            position: absolute;
+            top: -38px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--primary);
+            color: #ffffff;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            white-space: nowrap;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: none;
+            direction: ltr;
+            font-family: sans-serif;
+        }
+
+        .card-popup::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: var(--primary) transparent transparent transparent;
+        }
+
+        .clickable-word.active-word .card-popup {
+            display: block !important;
+        }
+
+        .audio-icon {
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 1.1rem;
+            vertical-align: middle;
+        }
+
+        .clickable-word {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+            padding: 2px 4px;
+            margin: 0 2px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .clickable-word:hover {
+            background-color: #d1fae5;
+            color: #059669;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            direction: rtl;
+            margin-top: 15px;
+        }
+
+        .opt-btn {
+            position: relative;
+            padding: 14px;
+            background: #f8fafc;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: 0.2s;
+        }
+
+        .opt-btn:hover {
+            background: #e2e8f0;
+        }
+
+        .story-container {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            position: relative;
+        }
+
+        .story-box {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        .story-title {
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 15px;
+            direction: ltr;
+        }
+
+        .story-title span.ar-title {
+            direction: rtl;
+            display: inline-block;
+            color: #c2410c;
+            margin-left: 8px;
+        }
+
+        .story-text {
+            font-size: 1.35rem;
+            direction: rtl;
+            line-height: 2.3;
+            color: #1e293b;
+            text-align: justify;
+        }
+
+        .notes-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .note-box {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .note-box label {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 0.95rem;
+        }
+
+        .note-box textarea {
+            width: 100%;
+            height: 120px;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .quiz-box {
+            position: relative;
+            background: #fffbeeb0;
+            border: 2px solid #f59e0b;
+            padding: 18px;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+
+        .quiz-title {
+            font-weight: bold;
+            color: #c2410c;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .quiz-question {
+            font-size: 1.2rem;
+            direction: rtl;
+            margin-bottom: 12px;
+            font-weight: 500;
+        }
+
+        .save-status {
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: bold;
+            text-align: right;
+            height: 15px;
+        }
+
+        .footer-controls {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.05rem;
+        }
+
+        .action-btn {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+
+        .action-btn:hover {
+            opacity: 0.9;
+        }
+
+        .exercise-card {
+            position: relative;
+            width: 100%;
+            background: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+        }
+
+        .hint-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            z-index: 5;
+        }
+
+        .hint-btn:hover {
+            background: #d97706;
+        }
+
+        .hint-box {
+            display: none;
+            width: 100%;
+            background: #fefce8;
+            border: 1px solid #fef08a;
+            padding: 12px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            color: #a16207;
+            box-sizing: border-box;
+            text-align: right;
+            direction: rtl;
+        }
+
+        .hint-box.active {
+            display: block;
+        }
+
+        .sentence-display {
+            font-size: 1.6rem;
+            direction: rtl;
+            margin: 15px 0;
+            color: var(--primary);
+            text-align: center;
+        }
+
+        .word-pool {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            direction: rtl;
+            justify-content: center;
+            margin: 15px 0;
+            min-height: 50px;
+            padding: 10px;
+            background: #f8fafc;
+            border: 1px dashed #cbd5e1;
+            border-radius: 8px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .word-chip {
+            padding: 8px 16px;
+            background: #e2e8f0;
+            border: 1px solid #cbd5e1;
+            border-radius: 20px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            user-select: none;
+            transition: 0.2s;
+        }
+
+        .word-chip:hover {
+            background: #0284c7;
+            color: white;
+        }
+
+        .sentence-target {
+            min-height: 60px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            width: 100%;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            direction: rtl;
+            padding: 10px;
+            align-items: center;
+            justify-content: flex-start;
+            background: #fff;
+            box-sizing: border-box;
+        }
+
+        .diktat-input {
+            width: 100%;
+            max-width: 450px;
+            padding: 10px;
+            font-size: 1.4rem;
+            direction: rtl;
+            text-align: center;
+            border: 2px solid #cbd5e1;
+            border-radius: 6px;
+            margin: 10px 0;
+        }
+
+        .audio-buttons-group {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .listen-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+            font-weight: bold;
+        }
+
+        .listen-btn:hover {
+            background: #dc2626;
+        }
+
+        .listen-btn.slow {
+            background: #f59e0b;
+        }
+
+        .listen-btn.slow:hover {
+            background: #d97706;
+        }
+
+        .submit-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .puzzle-img {
+            font-size: 4rem;
+            margin: 10px 0;
+            user-select: none;
+        }
+
+        .crossword-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 45px);
+            gap: 5px;
+            margin: 20px 0;
+            direction: rtl;
+        }
+
+        .crossword-cell {
+            width: 45px;
+            height: 45px;
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: bold;
+            direction: rtl;
+            box-sizing: border-box;
+        }
+
+        .crossword-cell.block {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .crossword-hints {
+            width: 100%;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            text-align: right;
+            direction: rtl;
+            box-sizing: border-box;
+        }
+
+        .crossword-hints ul {
+            margin: 5px 0 0 0;
+            padding-right: 20px;
+        }
+
+        .arabic-keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            width: 100%;
+            max-width: 550px;
+            margin: 10px 0;
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 8px;
+            box-sizing: border-box;
+            direction: rtl;
+        }
+
+        .kbd-row {
+            display: flex;
+            justify-content: center;
+            gap: 4px;
+        }
+
+        .kbd-key {
+            padding: 8px 12px;
+            background: #fff;
+            border: 1px solid #cbd5e1;
+            border-radius: 4px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            user-select: none;
+            transition: 0.1s;
+        }
+
+        .kbd-key:hover {
+            background: #0284c7;
+            color: white;
+        }
+
+        .kbd-key.wide {
+            padding: 8px 18px;
+            font-size: 0.9rem;
+            background: #e2e8f0;
+        }
+
+        .attempts-badge {
+            font-size: 0.9rem;
+            color: #c2410c;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+
+        .timer-badge {
+            background: #ef4444;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-weight: bold;
+        }
+
+        .lives-badge {
+            color: #ef4444;
+            font-size: 1.1rem;
+            font-weight: bold;
+        }
+
+        /* Giriş Portalı ve Çoklu Kullanıcı Stilleri */
+        .portal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .portal-card {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 520px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .portal-card h3 {
+            margin-top: 0;
+            color: var(--primary);
+            font-size: 1.5rem;
+        }
+
+        .portal-card input {
+            width: 100%;
+            padding: 10px;
+            margin: 6px 0;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+        }
+
+        .portal-card button {
+            width: 100%;
+            padding: 10px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: 0.2s;
+        }
+
+        .portal-card button:hover {
+            background: #059669;
+        }
+
+        .user-leaderboard-list {
+            margin: 15px 0;
+            text-align: left;
+            max-height: 220px;
+            overflow-y: auto;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 5px;
+        }
+
+        .user-leader-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+
+        .user-leader-item:hover {
+            background: #f8fafc;
+        }
+
+        /* Kullanıcı Profili Stilleri */
+        .profile-container {
+            width: 100%;
+            background: #fff;
+            padding: 25px;
+            border-radius: 12px;
+            box-sizing: border-box;
+            text-align: left;
+            direction: ltr;
+        }
+
+        .profile-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .avatar {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-card h4 {
+            margin: 0;
+            color: #64748b;
+            font-size: 0.85rem;
+        }
+
+        .stat-card .val {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: var(--primary);
+            margin-top: 5px;
+        }
+
+        /* Seviyeye Özel Çalışma Paneli Stilleri */
+        .study-workspace {
+            background: #f0fdf4;
+            border: 2px solid #86efac;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 25px;
+        }
+
+        .study-workspace h4 {
+            margin-top: 0;
+            color: #166534;
+            font-size: 1.15rem;
+        }
+
+        .ext-platforms {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .ext-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            color: white;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: bold;
+        }
+
+        .advice-box {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 15px;
+            border-radius: 8px;
+            color: #1e40af;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+        }
+
+        .level-progress-list {
+            margin-bottom: 25px;
+        }
+
+        .progress-item {
+            margin-bottom: 12px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar-bg {
+            height: 10px;
+            background: #e2e8f0;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--accent);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        .profile-notes-list {
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .note-item {
+            background: #fff;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .delete-note-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+
+        /* Modal & Çizim Alanı Stilleri */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(8px);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .modal-card {
+            background: #ffffff;
+            padding: 25px;
+            border-radius: 16px;
+            width: 94%;
+            max-width: 860px;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            box-sizing: border-box;
+        }
+
+        .canvas-toolbar {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+            background: #f1f5f9;
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .canvas-container {
+            position: relative;
+            flex: 1;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            background: #f8fafc;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            touch-action: none;
+            background: transparent;
+            z-index: 10;
+        }
+
+        #fileContentPreview {
+            position: absolute;
+            inset: 0;
+            padding: 20px;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            font-size: 1.1rem;
+            color: #334155;
+            z-index: 5;
+            background: white;
+        }
+
+        .file-link-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            padding: 8px 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            margin-top: 6px;
+            font-size: 0.88rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- GİRİŞ & KULLANICI SIRALAMA PORTALI -->
+<div class="portal-overlay" id="portalModal" style="display: none;">
+    <div class="portal-card">
+        <h3>🏆 Giriş & Başarı Sıralaması</h3>
+        <p style="color: #64748b; font-size: 0.85rem; margin-bottom: 10px;">Giriş yapmak için profilinizi seçin veya yeni bir kayıt oluşturun.</p>
+        
+        <div id="usersList" class="user-leaderboard-list"></div>
+
+        <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 15px 0;">
+
+        <h4 id="formTitle" style="margin: 5px 0; font-size: 0.95rem; color: var(--primary);">Yeni Profil Ekle</h4>
+        <input type="hidden" id="editUserId" value="">
+        <input type="text" id="portalName" placeholder="Adınız">
+        <input type="text" id="portalSurname" placeholder="Soyadınız">
+        <input type="email" id="portalEmail" placeholder="E-posta Adresiniz">
+        <button id="saveUserBtn" onclick="saveUserProfilePortal()">Kullanıcıyı Kaydet ve Giriş Yap</button>
+        <button id="cancelEditBtn" onclick="resetPortalForm()" style="display:none; background:#64748b;">İptal</button>
+    </div>
+</div>
+
+<!-- DOSYA GÖRÜNTÜLEME VE ÇİZİM / KALEM MODALI -->
+<div class="modal-overlay" id="fileViewerModal" style="display: none;">
+    <div class="modal-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 id="viewerModalTitle" style="margin: 0; color: var(--primary); font-size: 1.2rem;">📄 Doküman Önizleme & Kalem Çalışması</h3>
+            <button onclick="closeFileViewer()" style="background: #ef4444; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ Kapat</button>
+        </div>
+        
+        <div class="canvas-toolbar">
+            <button class="mode-btn active" id="penToolBtn" onclick="setDrawingMode(true)">✏️ Kalem Aç</button>
+            <button class="mode-btn" id="panToolBtn" onclick="setDrawingMode(false)">✋ Normal / İncele</button>
+            <label style="font-size: 0.85rem; font-weight: bold; margin-left: 10px;">Renk:</label>
+            <input type="color" id="penColor" value="#ef4444" style="border: none; width: 30px; height: 30px; cursor: pointer; background: none;">
+            <label style="font-size: 0.85rem; font-weight: bold; margin-left: 10px;">Kalınlık:</label>
+            <select id="penSize" style="padding: 4px; font-size: 0.85rem;">
+                <option value="2">İnce (2px)</option>
+                <option value="4" selected>Normal (4px)</option>
+                <option value="8">Kalın (8px)</option>
+            </select>
+            <button onclick="clearCanvas()" style="margin-left: auto; background: #64748b; color: white; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.85rem;">🗑️ Çizimi Temizle</button>
+        </div>
+
+        <div class="canvas-container" id="canvasContainer">
+            <div id="fileContentPreview">Yüklenen doküman içeriği...</div>
+            <canvas id="pdfCanvas"></canvas>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <header>
+        <h2>İnteraktif Arapça Öğrenme Platformu</h2>
+    </header>
+
+    <div class="level-control">
+        <div>
+            <label for="levelSelect"><strong>Zorluk Seviyesi:</strong></label>
+            <select id="levelSelect" onchange="manualLevelSelect(this.value)">
+                <option value="1">1. Seviye - Başlangıç (A1)</option>
+                <option value="2">2. Seviye - Temel (A2)</option>
+                <option value="3">3. Seviye - Orta Altı (B1)</option>
+                <option value="4">4. Seviye - Orta Üstü (B2)</option>
+                <option value="5">5. Seviye - İleri (C1)</option>
+                <option value="6">6. Seviye - Uzman / Akıcı (C2)</option>
+            </select>
+        </div>
+        <span id="livesDisplay" class="lives-badge">Can: ❤️❤️❤️❤️❤️</span>
+        <span id="timerDisplay" class="timer-badge">⏱️ 30s</span>
+        <span id="levelStatus" class="badge">Aktif: 1. Seviye (A1)</span>
+    </div>
+
+    <div class="mode-selector">
+        <button class="mode-btn active" onclick="switchMode('matching_tr', event)">Arapça-Türkçe Eşleştirme</button>
+        <button class="mode-btn" onclick="switchMode('matching_syn', event)">Eş Anlamlı Kelimeler</button>
+        <button class="mode-btn" onclick="switchMode('matching_ant', event)">Zıt Anlamlı Kelimeler</button>
+        <button class="mode-btn" onclick="switchMode('puzzle', event)">Bulmaca</button>
+        <button class="mode-btn" onclick="switchMode('completion', event)">Cümle Tamamlama</button>
+        <button class="mode-btn" onclick="switchMode('sentence', event)">Cümle Kurma</button>
+        <button class="mode-btn" onclick="switchMode('dictation', event)">Sesli Dikte</button>
+        <button class="mode-btn" onclick="switchMode('exam', event)">Quiz & Sınav</button>
+        <button class="mode-btn" onclick="switchMode('story', event)">Okuma & Metin (Hikaye)</button>
+        <button class="mode-btn" style="background-color: #3b82f6; color: white;" onclick="switchMode('profile', event)">👤 Kullanıcı Profili</button>
+    </div>
+
+    <div class="game-area" id="gameArea"></div>
+
+    <div class="footer-controls">
+        <div id="scoreDisplay">Puan: 0</div>
+        <div id="progressDisplay">İçerik: 1/10</div>
+        <button class="action-btn" onclick="nextQuestion()">Sonraki İçerik</button>
+    </div>
+</div>
+
+<script>
+    function speakArabic(text, rate) {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            var utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'ar-SA';
+            utterance.rate = rate || 0.8;
+            window.speechSynthesis.speak(utterance);
+        }
+    }
+
+    var wordPool = {
+        1: [
+            { ar: "حَارٌّ", tr: "Sıcak", syn: "سَاخِنٌ", synTr: "Sıcak", ant: "بَارِدٌ", antTr: "Soğuk" },
+            { ar: "مُشْرِقَةٌ", tr: "Parlak/Aydınlık", syn: "مُنِيرَةٌ", synTr: "Aydınlık", ant: "مُظْلِمَةٌ", antTr: "Karanlık" },
+            { ar: "مُزْدَحِمٌ", tr: "Kalabalık", syn: "مَلِيءٌ", synTr: "Dolu", ant: "فَارِغٌ", antTr: "Boş" },
+            { ar: "لَذِيذٌ", tr: "Lezzetli", syn: "شهي", synTr: "İştah açıcı", ant: "سيء", antTr: "Kötü" }
+        ],
+        2: [
+            { ar: "سَرِيعٌ", tr: "Hızlı", syn: "عَاجِلٌ", synTr: "Acele/Hızlı", ant: "بَطِيءٌ", antTr: "Yavaş" },
+            { ar: "قَرِيبٌ", tr: "Yakın", syn: "دَانٍ", synTr: "Yakın", ant: "بَعِيدٌ", antTr: "Uzak" },
+            { ar: "سَعِيدٌ", tr: "Mutlu", syn: "مَسْرُورٌ", synTr: "Neşeli", ant: "حَزِينٌ", antTr: "Üzgün" },
+            { ar: "كَبِيرٌ", tr: "Büyük", syn: "ضَخْمٌ", synTr: "Devasa", ant: "صَغِيرٌ", antTr: "Küçük" }
+        ],
+        3: [
+            { ar: "اجْتِهَادٌ", tr: "Çalışkanlık", syn: "مُثَابَرَةٌ", synTr: "Azim", ant: "كَسَلٌ", antTr: "Tembellik" },
+            { ar: "شَجَاعَةٌ", tr: "Cesaret", syn: "بَسَالَةٌ", synTr: "Yiğitlik", ant: "جُبْنٌ", antTr: "Korkaklık" },
+            { ar: "عَدْلٌ", tr: "Adalet", syn: "إِنْصَافٌ", synTr: "Hakkaniyet", ant: "ظُلْمٌ", antTr: "Zulüm" },
+            { ar: "الأَمَلُ", tr: "Umut", syn: "الرَّجَاءُ", synTr: "Beklenti/Umut", ant: "اليَأْسُ", antTr: "Umutsuzluk" }
+        ],
+        4: [
+            { ar: "ازْدِهَارٌ", tr: "Refah/Gelişme", syn: "تَقَدُّمٌ", synTr: "İlerleme", ant: "تَدَهْوُرٌ", antTr: "Kötüleşme" },
+            { ar: "تَفَاؤُلٌ", tr: "Nikbinlik/İyimserlik", syn: "إِيجَابِيَّةٌ", synTr: "Olumluluk", ant: "تشَاؤُمٌ", antTr: "Kötümserlik" },
+            { ar: "حِكْمَةٌ", tr: "Hikmet/Bilgelik", syn: "رَشَادٌ", synTr: "Doğru Yol", ant: "جَهْلٌ", antTr: "Cehalet" },
+            { ar: "غَمَضٌ", tr: "Karmaşıklık", syn: "إِبْهَامٌ", synTr: "Belirsizlik", ant: "وُضُوحٌ", antTr: "Açıklık" }
+        ],
+        5: [
+            { ar: "اسْتِقْرَارٌ", tr: "Istikrar/Denge", syn: "ثَبَاتٌ", synTr: "Kalıcılık", ant: "اضْطِرَابٌ", antTr: "Kargaşa" },
+            { ar: "نَزَاهَةٌ", tr: "Dürüstlük/Tarafsızlık", syn: "عَفَافٌ", synTr: "Erdem", ant: "فَسَادٌ", antTr: "Yolsuzluk" },
+            { ar: "مَرُونَةٌ", tr: "Esneklik", syn: "تَكَيُّفٌ", synTr: "Uyum", ant: "تَصَلُّبٌ", antTr: "Sertlik/Katılık" },
+            { ar: "إِيجَازٌ", tr: "Özet/Kısalık", syn: "اخْتِصَارٌ", synTr: "Kısaltma", ant: "إِطْنَابٌ", antTr: "Lafı Uzatma" }
+        ],
+        6: [
+            { ar: "عُنْفُوانٌ", tr: "Zirve/Tazelik", syn: "قُوَّةٌ", synTr: "Güç", ant: "ضَعْفٌ", antTr: "Zayıflık" },
+            { ar: "مُحَاكَاةٌ", tr: "Taklit/Modelleme", syn: "تَقْلِيدٌ", synTr: "Öykünme", ant: "ابْتِكارٌ", antTr: "Orijinallik/İcat" },
+            { ar: "سَجِيَّةٌ", tr: "Mizaç/Meyil", syn: "فِطْرَةٌ", synTr: "Doğuş", ant: "تَصَنُّعٌ", antTr: "Yapmacıklık" },
+            { ar: "سُمُوٌّ", tr: "Yücelik", syn: "رِفْعَةٌ", synTr: "Yükseklik", ant: "انْحِطَاطٌ", antTr: "Çöküş" }
+        ]
+    };
+
+    var puzzleDatabase = {
+        1: [
+            { icon: "☀️", word: "شمس", tr: "Güneş", hint: "Gündüzleri parlayan ısı ve ışık kaynağı." },
+            { icon: "🍎", word: "تفاح", tr: "Elma", hint: "Kırmızı veya yeşil tatlı meyve." },
+            { icon: "📖", word: "كتاب", tr: "Kitap", hint: "Okumak için sayfaları olan nesne." },
+            { icon: "✏️", word: "قلم", tr: "Kalem", hint: "Yazı yazmak için kullanılan araç." }
+        ],
+        2: [
+            { icon: "🚗", word: "سيارة", tr: "Araba", hint: "Ulaşımda kullanılan 4 tekerlekli araç." },
+            { icon: "🏠", word: "بيت", tr: "Ev", hint: "İçinde yaşadığımız barınak." },
+            { icon: "🐟", word: "سمك", tr: "Balık", hint: "Suda yaşayan yüzgeçli canlı." },
+            { icon: "✈️", word: "طائرة", tr: "Uçak", hint: "Gökyüzünde uçan ulaşım aracı." }
+        ],
+        3: [
+            { type: "crossword", title: "B1 Çengel Bulmaca 1", hints: ["1. İlim öğrenen kişi (طالب)", "2. Başarının anahtarı (اجتهاد)"], grid: [['ط', 'ا', 'ل', 'ب', '■'], ['ا', 'ج', 'ت', 'ه', 'ا']], solution: ["طالب", "اجتهاد"], hintDetail: "1. Öğrenci <br> 2. Çalışkanlık" },
+            { type: "crossword", title: "B1 Çengel Bulmaca 2", hints: ["1. Sabır (صبر)", "2. Adalet (عدل)"], grid: [['ص', 'ب', 'ر', '■'], ['ع', 'د', 'ل', '■']], solution: ["صبر", "عدل"], hintDetail: "1. Sabır <br> 2. Adalet" }
+        ],
+        4: [
+            { type: "crossword", title: "B2 Çengel Bulmaca 1", hints: ["1. İyimserlik (تفاؤل)", "2. Bilgelik (حكمة)"], grid: [['ت', 'ف', 'ا', 'ؤ', 'ل'], ['■', 'ح', 'ك', 'م', 'ة']], solution: ["تفاؤل", "حكمة"], hintDetail: "1. İyimserlik <br> 2. Hikmet" },
+            { type: "crossword", title: "B2 Çengel Bulmaca 2", hints: ["1. İlerleme/Refah (ازدهار)", "2. Umut (أمل)"], grid: [['ا', 'ز', 'د', 'ه', 'ا'], ['أ', 'م', 'ل', '■', '■']], solution: ["ازدهار", "أمل"], hintDetail: "1. Refah <br> 2. Umut" }
+        ],
+        5: [
+            { type: "crossword", title: "C1 Çengel Bulmaca 1", hints: ["1. İstikrar (استقرار)", "2. Erdem (نزاهة)"], grid: [['ا', 'س', 'ت', 'ق', 'ر'], ['■', 'ن', 'ز', 'ا', 'ه']], solution: ["استقرار", "نزاهة"], hintDetail: "1. İstikrar <br> 2. Dürüstlük" },
+            { type: "crossword", title: "C1 Çengel Bulmaca 2", hints: ["1. Esneklik (مرونة)", "2. Özet (إيجاز)"], grid: [['م', 'ر', 'و', 'ن', 'ة'], ['إ', 'ي', 'ج', 'ا', 'ز']], solution: ["مرونة", "إيجاز"], hintDetail: "1. Esneklik <br> 2. Özet" }
+        ],
+        6: [
+            { type: "crossword", title: "C2 Çengel Bulmaca 1", hints: ["1. Zirve/Coşku (عنفوان)", "2. Yücelik (سمو)"], grid: [['ع', 'ن', 'ف', 'و', 'ا'], ['■', '■', 'س', 'م', 'و']], solution: ["عنفوان", "سمو"], hintDetail: "1. Coşku <br> 2. Yücelik" },
+            { type: "crossword", title: "C2 Çengel Bulmaca 2", hints: ["1. Mizaç (سجية)", "2. Taklit/Öykünme (محاكاة)"], grid: [['س', 'ج', 'ي', 'ة', '■'], ['م', 'ح', 'ا', 'ك', 'ا']], solution: ["سجية", "محاكاة"], hintDetail: "1. Mizaç <br> 2. Öykünme" }
+        ]
+    };
+
+    var completionDatabase = {
+        1: [
+            { sentence: "الْجَوُّ ...... وَالشَّمْسُ مُشْرِقَةٌ.", options: ["حَارٌّ", "بَارِدٌ", "مُظْلِمٌ", "سَرِيعٌ"], correct: "حَارٌّ", tr: "Hava sıcak ve güneş parlıyor.", hint: "Havanın durumunu ifade eden sıfat." },
+            { sentence: "الْقِطَّةُ تَشْرَبُ ...... فِي الْمَطْبَخِ.", options: ["الْحَلِيبَ", "الْخُبْزَ", "القَلَمَ", "الْكُرَةَ"], correct: "الْحَلِيبَ", tr: "Kedi mutfakta süt içiyor.", hint: "Kedilerin sevdiği sıvı içecek." },
+            { sentence: "يَأْكُلُ الطَِّفْلُ ...... اللَّذِيذَةَ.", options: ["التُّفَّاحَةَ", "الْكِتَابَ", "الشَّمْسَ", "الْبَابَ"], correct: "التُّفَّاحَةَ", tr: "Çocuk lezzetli elmayı yiyor.", hint: "Yenilebilen kırmızı/yeşil meyve." }
+        ],
+        2: [
+            { sentence: "يَذْهَبُ الطَّالِبُ ...... إِلَى الْمَدْرَسَةِ.", options: ["مُبَكِّرًا", "مُتَأَخِّرًا", "طَوِيلًا", "بَعِيدًا"], correct: "مُبَكِّرًا", tr: "Öğrenci okula erkenden gider.", hint: "Erken gitmeyi belirten zarf." },
+            { sentence: "يَبْحَثُ عَلِيٌّ عَنِ الْكُتُبِ فِي ...... المَدْرَسَةِ.", options: ["مَكْتَبَةِ", "مَلْعَبِ", "سُوقِ", "مَطَارِ"], correct: "مَكْتَبَةِ", tr: "Ali okul kütüphanesinde kitap arıyor.", hint: "Kitapların bulunduğu mekân." },
+            { sentence: "يَتَدَرَّبُ يُوسُفُ لِتَحْسِينِ ...... الرِّيَاضِيَّةِ.", options: ["لِيَاقَتِهِ", "سَيَّارَتِهِ", "حَقِيبَتِهِ", "نَوْمِهِ"], correct: "لِيَاقَتِهِ", tr: "Yusuf sportif formunu geliştirmek için antrenman yapıyor.", hint: "Fiziksel durum / kondisyon." }
+        ],
+        3: [
+            { sentence: "الْعِلْمُ يَبْنِي بُيُوتًا لا ...... لَهَا.", options: ["عِمَادَ", "سَقْفَ", "بَابَ", "نَافِذَةَ"], correct: "عِمَادَ", tr: "İlim direği olmayan evler inşa eder.", hint: "Sütun, direk anlamına gelen kelime." },
+            { sentence: "إِدَارَةُ ...... هِيَ سِرُّ النَّجَاحِ فِي الحَيَاةِ.", options: ["الوَقْتِ", "الْخَوْفِ", "الْكَسَلِ", "النَّوْمِ"], correct: "الوَقْتِ", tr: "Zaman yönetimi hayatta başarının sırrıdır.", hint: "Saatler ve günlerle ilgili kavram." },
+            { sentence: "الحِفَاظُ عَلَى ...... مَسْؤُولِيَّةٌ جَمَاعِيَّةٌ.", options: ["البِيئَةِ", "السَّيَّارَةِ", "المَالِ", "الطَّاعَامِ"], correct: "البِيئَةِ", tr: "Çevreyi korumak kolektif bir sorumluluktur.", hint: "Doğa ve yaşam alanı." }
+        ],
+        4: [
+            { sentence: "التَّفَاؤُلُ يَمْنَحُ الإِنْسَانَ ...... لِمُوَاجَهَةِ الصِّعَابِ.", options: ["قُوَّةً", "خَوْفًا", "كَسَلًا", "تَرَدُّدًا"], correct: "قُوَّةً", tr: "İyimserlik insana güç verir.", hint: "Zorlukları aşmak için gereken enerji." },
+            { sentence: "تَطَوُّرُ الذَّكَاءِ الاصْطِنَاعِيِّ يُغَيِّرُ سُوقَ ...... .", options: ["العَمَلِ", "النَّوْمِ", "الْسَفَرِ", "الأَكْلِ"], correct: "العَمَلِ", tr: "Yapay zekanın gelişimi iş piyasasını değiştiriyor.", hint: "Meslekler ve istihdam dünyası." },
+            { sentence: "التَّنَوُّعُ الثَّقَافِيُّ يُعَزِّزُ ...... بَيْنَ الشُّعُوبِ.", options: ["التَّسَامُحَ", "النزَاعَ", "الْكَرَهَ", "الْجَهْلَ"], correct: "التَّسَامُحَ", tr: "Kültürel çeşitlilik halklar arasında hoşgörüü güçlendirir.", hint: "Anlayış ve hoşgörü kavramı." }
+        ],
+        5: [
+            { sentence: "تَسْعَى الدُّوَلُ إِلَى تَحْقِيقِ ...... الاِقْتِصَادِيِّ.", options: ["الاِسْتِقْرَارِ", "الاضْطِرَابِ", "الفَسَادِ", "الجهْلِ"], correct: "الاِسْتِقْرَارِ", tr: "Ülkeler ekonomik istikrarı sağlamaya çalışır.", hint: "Denge ve düzen anlamındaki kelime." },
+            { sentence: "تَحْقِيقُ العَدَالَةِ يَقْضِي عَلَى الفَوَارِقِ ...... .", options: ["الطَّبَقِيَّةِ", "الرِّيَاضِيَّةِ", "الْفَكِهِيَّةِ", "الْجَوِّيَّةِ"], correct: "الطَّبَقِيَّةِ", tr: "Adaleti sağlamak sınıfsal farkları yok eder.", hint: "Toplumsal katmanlar ile ilgili." },
+            { sentence: "البَحْثُ العِلْمِيُّ يَعْتَمِدُ عَلَى التَّحْلِيلِ ...... .", options: ["المَوْضُوعِيِّ", "الْعَشْوَائِيِّ", "الْسَطْحِيِّ", "الْخَاطِئِ"], correct: "المَوْضُوعِيِّ", tr: "Bilimsel araştırma nesnel analize dayanır.", hint: "Tarafsız, objektif anlamına gelir." }
+        ],
+        6: [
+            { sentence: "يَتَمَيَّزُ الكَاتِبُ بِـ ...... أُسْلُوبِهِ وَعُمِقِ أفْكَارِهِ.", options: ["سُمُوِّ", "ضَعْفِ", "تَصَنُّعِ", "انْحِطَاطِ"], correct: "سُمُوِّ", tr: "Yazar üslubunun yüceliğiyle öne çıkar.", hint: "Yücelik ve yüksek kalite anlamında." },
+            { sentence: "تَتَجَلَّى بَلاغَةُ اللُّغَةِ فِي ...... التَّعْبِيرِ الأدَبِيِّ.", options: ["عُنْفُوانِ", "ضَعْفِ", "قِلَّةِ", "غِيَابِ"], correct: "عُنْفُوانِ", tr: "Dilin belagatı edebi ifadenin zirvesinde tecelli eder.", hint: "Zirve, coşku, tazelik." },
+            { sentence: "عِلْمُ الدَّلاَلَةِ يَدْرُسُ العَلاَقَةَ بَيْنَ الأَلْفَاضِ وَ ...... .", options: ["المَعَانِي", "الأَصْوَاتِ", "الحُرُوفِ", "الأَرْقَامِ"], correct: "المَعَانِي", tr: "Anlambilim sözcükler ile anlamlar arasındaki ilişkiyi inceler.", hint: "Sözcüklerin içerdiği anlamlar." }
+        ]
+    };
+
+    var sentenceDatabase = {
+        1: [
+            { words: ["الْجَوُّ", "حَارٌّ", "فِي", "الصَّيْفِ"], correct: "الْجَوُّ حَارٌّ فِي الصَّيْفِ", tr: "Yazın hava sıcaktır.", hint: "Yaz mevsiminde havanın durumunu anlatır." },
+            { words: ["يَلْعَبُ", "الطَِّفْلُ", "بِالْكُرَةِ", "فِي", "الْحَدِيقَةِ"], correct: "يَلْعَبُ الطَِّفْلُ بِالْكُرَةِ فِي الْحَدِيقَةِ", tr: "Çocuk bahçede top oynuyor.", hint: "Çocuğun bahçedeki etkinliği." },
+            { words: ["تَشْرَبُ", "الْقِطَّةُ", "الْحَلِيبَ", "فِي", "الْمَطْبَخِ"], correct: "تَشْرَبُ الْقِطَّةُ الْحَلِيبَ فِي الْمَطْبَخِ", tr: "Kedi mutfakta süt içiyor.", hint: "Kedinin beslenme eylemi." }
+        ],
+        2: [
+            { words: ["يَقْرَأُ", "عَلِيٌّ", "كِتَابًا", "مُفِيدًا"], correct: "يَقْرَأُ عَلِيٌّ كِتَابًا مُفِيدًا", tr: "Ali faydalı bir kitap okuyor.", hint: "Ali'nin yaptığı okuma faaliyeti." },
+            { words: ["سَافَرَ", "سَمِيرٌ", "إِلَى", "قَرْيَةِ", "جَدِّهِ"], correct: "سَافَرَ سَمِيرٌ إِلَى قَرْيَةِ جَدِّهِ", tr: "Samir dedesinin köyüne seyahat etti.", hint: "Samir'in yolculuk hedefi." },
+            { words: ["يَعْمَلُ", "الإِبْرَاهِيمُ", "فِي", "دُكَّانِهِ", "المَحَلِّيِّ"], correct: "يَعْمَلُ الإِبْرَاهِيمُ فِي دُكَّانِهِ المَحَلِّيِّ", tr: "İbrahim mahalle dükkanında çalışıyor.", hint: "İbrahim'in çalışma yeri." }
+        ],
+        3: [
+            { words: ["الاجْتِهَادُ", "مِفْتَاحُ", "النَّجَاحِ", "فِي", "الحَيَاةِ"], correct: "الاجْتِهَادُ مِفْتَاحُ النَّجَاحِ فِي الحَيَاةِ", tr: "Çalışkanlık hayatta başarının anahtarıdır.", hint: "Başarıya ulaştıran prensip." },
+            { words: ["القِرَاءَةُ", "اليَوْمِيَّةُ", "تُغَذِّي", "العَقْلَ", "بِالأَفْكارِ"], correct: "القِرَاءَةُ اليَوْمِيَّةُ تُغَذِّي العَقْلَ بِالأَفْكارِ", tr: "Günlük okuma zihni fikirlerle besler.", hint: "Okumanın zihne faydası." },
+            { words: ["الصَّدَاقَةُ", "الحَقِيقِيَّةُ", "كَنْزٌ", "ثَمِينٌ", "جِدًّا"], correct: "الصَّدَاقَةُ الحَقِيقِيَّةُ كَنْزٌ ثَمِينٌ جِدًّا", tr: "Gerçek dostluk çok değerli bir hazinedir.", hint: "Dostluğun kıymeti." }
+        ],
+        4: [
+            { words: ["يُسَاهِمُ", "العِلْمُ", "فِي", "ازْدِهَارِ", "المُجْتَمَعِ"], correct: "يُسَاهِمُ العِلْمُ فِي ازْدِهَارِ المُجْتَمَعِ", tr: "İlim toplumun gelişmesine katkı sağlar.", hint: "Toplumun yükselişi ve ilim." },
+            { words: ["التَّفْكِيرُ", "النَّاقِدُ", "يُمَكِّنُ", "مِنْ", "تَمْيِيزِ", "الحَقِيقَةِ"], correct: "التَّفْكِيرُ النَّاقِدُ يُمَكِّنُ مِنْ تَمْيِيزِ الحَقِيقَةِ", tr: "Eleştirel düşünme gerçeği ayırt etmeyi sağlar.", hint: "Doğruyu bulma yöntemi." },
+            { words: ["الوَعْيُ", "المَالِيُّ", "يَحْمِي", "الأَفْرَادَ", "مِنَ", "الدُّيُونِ"], correct: "الوَعْيُ المَالِيُّ يَحْمِي الأَفْرَادَ مِنَ الدُّيُونِ", tr: "Finansal bilinç bireyleri borçtan korur.", hint: "Bütçe yönetimi ve borçlar." }
+        ],
+        5: [
+            { words: ["تَتَطَلَّبُ", "الزِّيَادَةُ", "الإِنْتَاجِيَّةُ", "مَرُونَةً", "عَالِيَةً"], correct: "تَتَطَلَّبُ الزِّيَادَةُ الإِنْتَاجِيَّةُ مَرُونَةً عَالِيَةً", tr: "Üretkenlik artışı yüksek esneklik gerektirir.", hint: "Üretim ve esneklik." },
+            { words: ["تَحْقِيقُ", "العَدَالَةِ", "يَضْمَنُ", "تَكَاُفُؤَ", "الفُرَصِ"], correct: "تَحْقِيقُ العَدَالَةِ يَضْمَنُ تَكَاُفُؤَ الفُرَصِ", tr: "Adaletin sağlanması fırsat eşitliğini garanti eder.", hint: "Toplumsal adalet ve fırsatlar." },
+            { words: ["الدِّبْلُومَاسِيَّةُ", "الحَكِيمَةُ", "تَحُلُّ", "النِّزَاعَاتِ", "الدَّوْلِيَّةَ"], correct: "الدِّبْلُومَاسِيَّةُ الحَكِيمَةُ تَحُلُّ النِّزَاعَاتِ الدَّوْلِيَّةَ", tr: "Bilge diplomasi uluslararası ihtilafları çözer.", hint: "Çatışma çözme yöntemi." }
+        ],
+        6: [
+            { words: ["تَعْكِسُ", "الأَدَبِيَّاتُ", "سَجِيَّةَ", "الشُّعُوبِ", "الأَصِيلَةَ"], correct: "تَعْكِسُ الأَدَبِيَّاتُ سَجِيَّةَ الشُّعُوبِ الأَصِيلَةَ", tr: "Edebiyat halkların özgün mizacını yansıtır.", hint: "Edebiyat ve halk kimliği." },
+            { words: ["تَتَجَلَّى", "بَلاغَةُ", "اللُّغَةِ", "فِي", "عُنْفُوانِ", "التَّعْبِيرِ"], correct: "تَتَجَلَّى بَلاغَةُ اللُّغَةِ فِي عُنْفُوانِ التَّعْبِيرِ", tr: "Dilin belagatı edebi ifadenin coşkusunda tecelli eder.", hint: "Arapça estetik ve belagatu." },
+            { words: ["يَدْرُسُ", "عِلْمُ", "الكونِيَّاتِ", "نَشْأَةَ", "الكَوْنِ"], correct: "يَدْرُسُ عِلْمُ الكونِيَّاتِ نَشْأَةَ الكَوْنِ", tr: "Kozmoloji evrenin oluşumunu inceler.", hint: "Evren bilimi araştırması." }
+        ]
+    };
+
+    var dictationDatabase = {
+        1: [
+            { ar: "الْعُطْلَةُ الصَّيْفِيَّةُ", tr: "Yaz tatili", hint: "Yaz mevsimi dinlenme dönemi." },
+            { ar: "الْحَدِيقَةُ الْكَبِيرَةُ", tr: "Büyük bahçe", hint: "Geniş ve yeşil açık alan." },
+            { ar: "الشَّمْسُ مُشْرِقَةٌ", tr: "Güneş parlıyor", hint: "Aydınlık gün ifadesi." }
+        ],
+        2: [
+            { ar: "القِرَاءَةُ تُغَذِّي العَقْلَ", tr: "Okumak zihnî besler", hint: "Kitap okumanın zihinsel faydası." },
+            { ar: "المَزْرَعَةُ وَاسِعَةٌ جِدًّا", tr: "Çiftlik çok geniş", hint: "Köydeki tarım alanı." },
+            { ar: "المُسْتَشْفَى فِي المَدِينَةِ", tr: "Hastane şehirde", hint: "Sağlık kurumu konumu." }
+        ],
+        3: [
+            { ar: "الصَبْرُ مِفْتَاحُ الفَرَجِ", tr: "Sabır ferahlığın anahtarıdır", hint: "Önemli bir atasözü." },
+            { ar: "إِدَارَةُ الوَقْتِ مُهِمَّةٌ", tr: "Zaman yönetimi önemlidir", hint: "Planlı yaşama ilkesi." },
+            { ar: "الحِفَاظُ عَلَى البِيئَةِ", tr: "Çevreyi korumak", hint: "Doğa bilinci ifadesi." }
+        ],
+        4: [
+            { ar: "التَفَاؤُلُ سِرُّ النَجَاحِ", tr: "İyimserlik başarının sırrıdır", hint: "Olumlu bakış açısı." },
+            { ar: "التَّنَوُّعُ الثَّقَافِيُّ يُثْرِي", tr: "Kültürel çeşitlilik zenginleştirir", hint: "Toplumsal zenginlik." },
+            { ar: "التَّفْكِيرُ النَّاقِدُ مُفِيدٌ", tr: "Eleştirel düşünme faydalıdır", hint: "Analiz yeteneği." }
+        ],
+        5: [
+            { ar: "الاستِقْرَارُ يُعَزِّزُ النُمُوَّ", tr: "İstikrar büyümeyi güçlendirir", hint: "Ekonomik ve sosyal denge." },
+            { ar: "تَكَاُفُؤُ الفُرَصِ لِلْجَمِيعِ", tr: "Herkes için fırsat eşitliği", hint: "Sosyal adalet prensibi." },
+            { ar: "البَحْثُ العِلْمِيُّ الرَّصِينُ", tr: "Ciddi/Sağlam bilimsel araştırma", hint: "Akademik nitelik." }
+        ],
+        6: [
+            { ar: "العُنْفُوانُ يَتَجَلَّى فِي الإِبْدَاعِ", tr: "Coşku yaratıcılıkta kendini gösterir", hint: "Edebi ve sanatsal performans." },
+            { ar: "تَلاقُحُ الحَضَارَاتِ البَشَرِيَّةِ", tr: "İnsanlık medeniyetlerinin etkileşimi", hint: "Tarihsel gelişim süreci." },
+            { ar: "عِلْمُ الكَوْنِيَّاتِ وَالْفِيزْيَاءِ", tr: "Kozmoloji ve fizik bilimi", hint: "Evrensel evren incelemesi." }
+        ]
+    };
+
+    var examDatabase = {
+        1: [
+            { question: "مَا مَعْنَى كَلِمَةِ 'كِتَابٌ'؟", options: ["Defter", "Kitap", "Kalem", "Masa"], correct: "Kitap", hint: "Okumak için kullanılan materyal." },
+            { question: "مَا مَعْنَى 'الْجَوُّ حَارٌّ'؟", options: ["Hava soğuk", "Hava sıcak", "Hava yağmurlu", "Hava rüzgarlı"], correct: "Hava sıcak", hint: "Yaz mevsimi hava durumu." },
+            { question: "مَا مَعْنَى 'قِطَّةٌ'؟", options: ["Köpek", "Kuş", "Kedi", "Balık"], correct: "Kedi", hint: "Miyavlayan evcil hayvan." }
+        ],
+        2: [
+            { question: "مَا مَعْنَى 'مَسْرُورٌ'؟", options: ["Üzgün", "Neşeli/Mutlu", "Yorgun", "Korkmuş"], correct: "Neşeli/Mutlu", hint: "Sevinçli hissetme hali." },
+            { question: "مَا مَعْنَى 'مَكْتَبَةٌ'؟", options: ["Kütüphane", "Hastane", "Okul", "Pazar"], correct: "Kütüphane", hint: "Kitapların korunduğu mekân." },
+            { question: "مَا مَعْنَى 'سَرِيعٌ'؟", options: ["Yavaş", "Ağır", "Hızlı", "Uzak"], correct: "Hızlı", hint: "Çabuk hareket eden." }
+        ],
+        3: [
+            { question: "مَا مَعْنَى 'اجْتِهَادٌ'؟", options: ["Tembellik", "Çalışkanlık/Azim", "Korkaklık", "Cahillik"], correct: "Çalışkanlık/Azim", hint: "Başarı için harcanan gayret." },
+            { question: "مَا مَعْنَى 'البِيئَةُ'؟", options: ["Çevre/Doğa", "Araba", "Bina", "Para"], correct: "Çevre/Doğa", hint: "Canlıların yaşadığı ortam." },
+            { question: "مَا مَعْنَى 'الصَّدَاقَةُ'؟", options: ["Düşmanlık", "Dostluk", "Yalnızlık", "Korku"], correct: "Dostluk", hint: "Arkadaşlar arasındaki bağ." }
+        ],
+        4: [
+            { question: "مَا مَعْنَى 'ازْدِهَارٌ'؟", options: ["Kötüleşme", "Refah/Gelişme", "Fakirlik", "Gerileme"], correct: "Refah/Gelişme", hint: "İlerleme ve parlama dönemi." },
+            { question: "مَا مَعْنَى 'تَفَاؤُلٌ'؟", options: ["Kötümserlik", "İyimserlik", "Öfke", "Üzüntü"], correct: "İyimserlik", hint: "Geleceğe umutla bakma." },
+            { question: "مَا مَعْنَى 'التَّسَامُحُ'؟", options: ["Baskı", "Hoşgörü", "Şiddet", "Nefret"], correct: "Hoşgörü", hint: "Farklılıklara saygı gösterme." }
+        ],
+        5: [
+            { question: "مَا مَعْنَى 'اسْتِقْرَارٌ'؟", options: ["Kargaşa", "İstikrar/Denge", "Değişkenlik", "Savaş"], correct: "İstikrar/Denge", hint: "Düzene girme ve sabitleşme." },
+            { question: "مَا مَعْنَى 'مَوْضُوعِيٌّ'؟", options: ["Taraflı", "Tarafsız/Nesnel", "Karmaşık", "Yüzeysel"], correct: "Tarafsız/Nesnel", hint: "Objektif yaklaşım biçimi." },
+            { question: "مَا مَعْنَى 'الشَّفَافِيَّةُ'؟", options: ["Gizlilik", "Şeffaflık/Açıklık", "Karanlık", "Yolsuzluk"], correct: "Şeffaflık/Açıklık", hint: "Açık ve net olma durumu." }
+        ],
+        6: [
+            { question: "مَا مَعْنَى 'عُنْفُوانٌ'؟", options: ["Zayıflık", "Zirve/Tazelik/Coşku", "Yaşlılık", "Durgunluk"], correct: "Zirve/Tazelik/Coşku", hint: "En güçlü ve parlak çağ." },
+            { question: "مَا مَعْنَى 'سَجِيَّةٌ'؟", options: ["Yapmacıklık", "Mizaç/Doğal karakter", "Sonradan öğrenilen", "Korku"], correct: "Mizaç/Doğal karakter", hint: "İnsanın öz yapısı ve mizacı." },
+            { question: "مَا مَعْنَى 'سُمُوٌّ'؟", options: ["Alçaklık", "Yücelik/Yükseliş", "Çöküş", "Sıradanlık"], correct: "Yücelik/Yükseliş", hint: "Yüksek seviye ve erdem." }
+        ]
+    };
+
+    var storyDatabase = {
+        1: [
+            { id: "s1_1", titleTr: "(1/10) Sahilde Yaz Tatili", titleAr: "الْعُطْلَةُ الصَّيْفِيَّةُ فِي الشَّاطِئِ", text: "الْجَوُّ حَارٌّ جِدًّا فِي فَصْلِ الصَّيْفِ، وَالشَّمْسُ مُشْرِقَةٌ فِي السَّمَاءِ. يَسْتَيْقِظُ أَحْمَدُ مُبَكِّرًا وَيَجْمَعُ حَقِيبَتَهُ. يَذْهَبُ مَعَ أَصْدِقَائِهِ إِلَى الشَّاطِئِ بِالْحَافِلَةِ.", tr: "Yazın hava çok sıcak ve güneş parlıyor. Ahmet erkenden uyanıp çantasını topluyor. Arkadaşlarıyla otobüsle sahile gidiyor.", dict: {"الْجَوُّ":"hava", "حَارٌّ":"sıcak", "الشَّاطِئِ":"sahil"}, quiz: {question: "كَيْفَ يَذْهَبُ أَحْمَدُ إِلَى الشَّاطِئِ؟", options: ["بِالْحَافِلَةِ (Otobüsle)", "بِالسَّفِينَةِ (Gemiyle)", "بِالسَّيَّارَةِ (Arabayla)", "بِالطَّائِرَةِ (Uçakla)"], correctIndex: 0, hint: "Metindeki son cümleyi inceleyin: Ulaşım aracı otobüstür (بالحافلة)." } }
+        ],
+        2: [
+            { id: "s2_1", titleTr: "(1/10) Okul Kütüphanesi", titleAr: "مَكْتَبَةُ المَدْرَسَةِ", text: "عَلِيٌّ طَالِبٌ نَشِيطٌ. يَذْهَبُ بَعْدَ الظُّهْرِ إِلَى مَكْتَبَةِ المَدْرَسَةِ. يَبْحَثُ عَنِ الكُتُبِ المَفِيدَةِ فِي التَّارِيخِ وَيَكْتُبُ المَلاَحَظَاتِ.", tr: "Ali çalışkan bir öğrencidir. Öğleden sonra okul kütüphanesine gider. Tarih kitapları arar ve notlar alır.", dict: {"مَكْتَبَةِ":"kütüphane", "التَّارِيخِ":"tarih"}, quiz: {question: "عَنْ مَاذَا يَبْحَثُ عَلِيٌّ؟", options: ["عَنِ الكُتُبِ (Kitaplar)", "عَنِ الأَلْعَابِ (Oyunlar)", "عَنِ الأَقْلاَمِ (Kalemler)", "عَنِ المَلاَبِسِ (Elbiseler)"], correctIndex: 0, hint: "Ali kütüphanede okumak için kitaplar aramaktadır (عن الكتب)." } }
+        ],
+        3: [
+            { id: "s3_1", titleTr: "(1/10) İlmin Önemi", titleAr: "أَهَمِّيَّةُ العِلْمِ", text: "العِلْمُ نُورٌ سَاطِعٌ يَهْدِي الإِنْسَانَ فِي ظُلُمَاتِ حَيَاتِهِ. بِالعِلْمِ تَتَقَدَّمُ الأُمَمُ وَتَبْنِي مُسْتَقْبَلًا أَفْضَلَ لِلأَجْيَالِ القَادِمَةِ.", tr: "İlim yol gösteren bir ışıktır. İlimle milletler ilerler ve gelecek nesiller için daha iyi bir gelecek inşa eder.", dict: {"العِلْمُ":"ilim", "الأُمَمُ":"milletler"}, quiz: {question: "مَاذَا يَبْحَثُ العِلْمُ لِلأَجْيَالِ القَادِمَةِ؟", options: ["مُسْتَقْبَلًا أَفْضَلَ (Daha İyi Bir Gelecek)", "الخَوْفَ (Korku)", "العَداوَةَ (Düşmanlık)", "الْفَقْرَ (Yoksulluk)"], correctIndex: 0, hint: "İlmin milletler için inşa ettiği şey daha iyi bir gelecektir (مستقبلا أفضل)." } }
+        ],
+        4: [
+            { id: "s4_1", titleTr: "(1/10) İyimserliğin Gücü", titleAr: "قُوَّةُ التَّفَاؤُلِ", text: "التَّفَاؤُلُ صِفَةٌ نَبِيلَةٌ تَمْنَحُ الإِنْسَانَ الأَمَلَ وَالقُوَّةَ. العَقْلُ الإِيجَابِيُّ يَسْتَطِيعُ تَحْوِيلَ التَّحَدِّيَاتِ إِلَى فُرَصٍ لِلنُّمُوِّ.", tr: "İyimserlik insana güç ve umut veren soylu bir özelliktir. Pozitif zihin zorlukları büyüme fırsatlarına dönüştürür.", dict: {"التَّفَاؤُلُ":"iyimserlik", "الأَمَلَ":"umut"}, quiz: {question: "مَاذَا يَفْعَلُ العَقْلُ الإِيجَابِيُّ أَمَامَ التَّحَدِّيَاتِ؟", options: ["يَحُوِّلُهَا إِلَى فُرَصٍ (Fırsata Dönüştürür)", "يَسْتَسْلِمُ لَهَا (Teslim Olur)", "يَهْرُبُ مِنْهَا (Kaçar)", "يَشْكُو مِنْهَا (Şikayet Eder)"], correctIndex: 0, hint: "Pozitif zihin zorlukları gelişim fırsatlarına dönüştürür (تحويل التحديات إلى فرص)." } }
+        ],
+        5: [
+            { id: "s5_1", titleTr: "(1/10) İstikrar ve Kalkınma", titleAr: "الاسْتِقْرَارُ وَالتَّنْمِيَةُ", text: "يُعَدُّ الاسْتِقْرَارُ الرَّكِيزَةَ الأَسَاسِيَّةَ لِتَحْقِيقِ التَّنْمِيَةِ المُسْتَدَامَةِ. إِنَّ الوُصُولَ إِلَى نَمُوذَجٍ إِقْتِصَادِيٍّ مَتِينٍ يَتَطَلَّبُ بِنَاءَ مَؤؤسَّسَاتٍ قَوِيَّةٍ تَعْتَمِدُ عَلَى الشَّفَافِيَّةِ.", tr: "İstikrar sürdürülebilir kalkınmanın temelidir. Sağlam bir ekonomi şeffaf kurumlar gerektirir.", dict: {"الاسْتِقْرَارُ":"istikrar", "التَّنْمِيَةِ":"kalkınma"}, quiz: {question: "مَاذَا يَتَطَلَّبُ الاِقْتِصَادُ المَتِينُ؟", options: ["مَؤَسَّسَاتٍ قَوِيَّةً وَشَفَّافَةً (Şeffaf ve Güçlü Kurumlar)", "الفَسَادَ (Yolsuzluk)", "الإِحْتِكَارَ (Tekelleşme)", "الاضْطِرَابَ (Kargaşa)"], correctIndex: 0, hint: "Sağlam bir ekonomik altyapı şeffaf kurumsal yapılara dayanır (مؤسسات قوية تعتمد على الشفافية)." } }
+        ],
+        6: [
+            { id: "s6_1", titleTr: "(1/10) Edebiyatın Yüceliği", titleAr: "سُمُوُّ الأَدَبِ", text: "تَتَجَلَّى بَلاغَةُ اللُّغَةِ العَرَبِيَّةِ فِي عُنْفُوانِ التَّعْبِيرِ الأدَبِيِّ الَّذِي يَعْكِسُ سَجِيَّةَ الأُمَّةِ وَعُمْقَ حَضَارَتِهَا.", tr: "Arapça belagati edebi ifadenin coşkusunda tecelli eder. Yüksek edebi metin akılları büyüleyen ölçülerle hissi şekillendirir.", dict: {"بَلاغَةُ":"belagat", "عُنْفُوانِ":"zirve/coşku"}, quiz: {question: "أَيْنَ تَتَجَلَّى بَلاغَةُ اللُّغَةِ العَرَبِيَّةِ؟", options: ["فِي عُنْفُوانِ التَّعْبِيرِ الأدَبِيِّ (Edebi İfadenin Zirvesinde)", "فِي الحَسَابَاتِ (Hesaplamalarda)", "فِي الِاهْتِمَامِ المَادِيِّ (Maddi Kaygıda)", "فِي التَّصَنُّعِ (Yapmacıklıkta)"], correctIndex: 0, hint: "Arapçanın belagat zirvesi edebi anlatımdadır (في عنفوان التعبير الأدبي)." } }
+        ]
+    };
+
+    var currentLevel = 1;
+    var currentQuestionIndex = 0;
+    var currentMode = 'story'; 
+    var score = 0;
+    var attempts = 0;
+    var lives = 5;
+    var timerSeconds = 30;
+    var timerInterval = null;
+    var selectedSentenceWords = [];
+    var selectedCards = [];
+    var matchedCount = 0;
+
+    var currentUserId = localStorage.getItem('currentUserId') || null;
+    var usersData = JSON.parse(localStorage.getItem('usersData')) || {};
+
+    var levelNames = {
+        1: "1. Seviye (A1)", 2: "2. Seviye (A2)", 3: "3. Seviye (B1)",
+        4: "4. Seviye (B2)", 5: "5. Seviye (C1)", 6: "6. Seviye (C2)"
+    };
+
+    var isDrawingActive = true;
+    var isDrawing = false;
+    var lastX = 0;
+    var lastY = 0;
+
+    window.onload = function() {
+        checkUserPortal();
+        loadUserData();
+        loadQuestion();
+        initCanvasDrawing();
+    };
+
+    function checkUserPortal() {
+        renderUsersLeaderboard();
+        if (!currentUserId || !usersData[currentUserId]) {
+            var userKeys = Object.keys(usersData);
+            if (userKeys.length > 0) {
+                currentUserId = userKeys[0];
+                localStorage.setItem('currentUserId', currentUserId);
+                document.getElementById('portalModal').style.display = 'none';
+            } else {
+                document.getElementById('portalModal').style.display = 'flex';
+            }
+        } else {
+            document.getElementById('portalModal').style.display = 'none';
+        }
+    }
+
+    function renderUsersLeaderboard() {
+        var listContainer = document.getElementById('usersList');
+        var userKeys = Object.keys(usersData);
+
+        if (userKeys.length === 0) {
+            listContainer.innerHTML = '<div style="color: #94a3b8; text-align: center; padding: 10px; font-size: 0.9rem;">Henüz kayıtlı kullanıcı bulunmuyor. Yeni profil ekleyin!</div>';
+            return;
+        }
+
+        var sortedUsers = userKeys.map(id => usersData[id]).sort((a, b) => (b.score || 0) - (a.score || 0));
+
+        listContainer.innerHTML = sortedUsers.map((u, index) => {
+            var badge = index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : '#' + (index + 1);
+            return `
+                <div class="user-leader-item" onclick="selectUser('${u.id}')">
+                    <div>
+                        <strong>${badge} ${u.name} ${u.surname}</strong>
+                        <div style="font-size: 0.75rem; color: #64748b;">${u.email || ''}</div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-weight: bold; color: var(--accent);">${u.score || 0} Puan</span>
+                        <button onclick="event.stopPropagation(); editUserPortal('${u.id}')" style="padding: 3px 8px; font-size: 0.75rem; background: #f59e0b; color: white; border: none; border-radius: 4px; cursor: pointer;">Güncelle</button>
+                        <button onclick="event.stopPropagation(); deleteUserPortal('${u.id}')" style="padding: 3px 8px; font-size: 0.75rem; background: #ef4444; color: white; border: none; border-radius: 4px; cursor: pointer;">Sil</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function selectUser(id) {
+        currentUserId = id;
+        localStorage.setItem('currentUserId', id);
+        document.getElementById('portalModal').style.display = 'none';
+        loadUserData();
+        loadQuestion();
+    }
+
+    function editUserPortal(id) {
+        var u = usersData[id];
+        if (!u) return;
+        document.getElementById('editUserId').value = u.id;
+        document.getElementById('portalName').value = u.name;
+        document.getElementById('portalSurname').value = u.surname;
+        document.getElementById('portalEmail').value = u.email || '';
+        document.getElementById('formTitle').innerText = "Profil Bilgilerini Güncelle";
+        document.getElementById('saveUserBtn').innerText = "Güncelle ve Giriş Yap";
+        document.getElementById('cancelEditBtn').style.display = "inline-block";
+    }
+
+    function deleteUserPortal(id) {
+        if (confirm("Bu kullanıcıyı silmek istediğinize emin misiniz? Bütün ilerlemesi ve verileri silinecektir.")) {
+            delete usersData[id];
+            localStorage.setItem('usersData', JSON.stringify(usersData));
+            if (currentUserId === id) {
+                currentUserId = null;
+                localStorage.removeItem('currentUserId');
+            }
+            renderUsersLeaderboard();
+            checkUserPortal();
+        }
+    }
+
+    function resetPortalForm() {
+        document.getElementById('editUserId').value = "";
+        document.getElementById('portalName').value = "";
+        document.getElementById('portalSurname').value = "";
+        document.getElementById('portalEmail').value = "";
+        document.getElementById('formTitle').innerText = "Yeni Profil Ekle";
+        document.getElementById('saveUserBtn').innerText = "Kullanıcıyı Kaydet ve Giriş Yap";
+        document.getElementById('cancelEditBtn').style.display = "none";
+    }
+
+    function saveUserProfilePortal() {
+        var editId = document.getElementById('editUserId').value;
+        var name = document.getElementById('portalName').value.trim();
+        var surname = document.getElementById('portalSurname').value.trim();
+        var email = document.getElementById('portalEmail').value.trim();
+
+        if (!name || !surname) {
+            alert('Lütfen ad ve soyad alanlarını doldurun.');
+            return;
+        }
+
+        var id = editId || 'user_' + Date.now();
+        var existingStats = usersData[id] ? usersData[id].stats : { correctAnswers: 0, wrongAnswers: 0, levelProgress: {1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0} };
+        var existingNotes = usersData[id] ? usersData[id].notes : [];
+        var existingUploads = usersData[id] ? usersData[id].levelUploads : {};
+        var existingLevelNotes = usersData[id] ? usersData[id].levelNotes : {};
+        var existingScore = usersData[id] ? usersData[id].score : 0;
+
+        usersData[id] = {
+            id: id,
+            name: name,
+            surname: surname,
+            email: email,
+            score: existingScore,
+            stats: existingStats,
+            notes: existingNotes,
+            levelUploads: existingUploads,
+            levelNotes: existingLevelNotes
+        };
+
+        localStorage.setItem('usersData', JSON.stringify(usersData));
+        resetPortalForm();
+        selectUser(id);
+    }
+
+    function loadUserData() {
+        if (currentUserId && usersData[currentUserId]) {
+            score = usersData[currentUserId].score || 0;
+        } else {
+            score = 0;
+        }
+        updateUI();
+    }
+
+    function saveUserData() {
+        if (currentUserId && usersData[currentUserId]) {
+            usersData[currentUserId].score = score;
+            localStorage.setItem('usersData', JSON.stringify(usersData));
+        }
+    }
+
+    function recordAnswer(isCorrect) {
+        if (!currentUserId || !usersData[currentUserId]) return;
+        var stats = usersData[currentUserId].stats;
+
+        if (isCorrect) stats.correctAnswers++;
+        else stats.wrongAnswers++;
+
+        var pool = getActivePool();
+        if (pool && pool.length > 0) {
+            var curr = stats.levelProgress[currentLevel] || 0;
+            var maxProg = Math.round(((currentQuestionIndex + 1) / pool.length) * 100);
+            if (maxProg > curr) stats.levelProgress[currentLevel] = maxProg;
+        }
+
+        saveUserData();
+    }
+
+    function manualLevelSelect(val) {
+        currentLevel = parseInt(val);
+        currentQuestionIndex = 0;
+        updateUI();
+        loadQuestion();
+    }
+
+    function switchMode(mode, evt) {
+        currentMode = mode;
+        var btns = document.querySelectorAll('.mode-btn');
+        for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+        if (evt && evt.target) evt.target.classList.add('active');
+        currentQuestionIndex = 0;
+        loadQuestion();
+    }
+
+    function getActivePool() {
+        if (currentMode === 'story') return storyDatabase[currentLevel];
+        if (currentMode === 'puzzle') return puzzleDatabase[currentLevel];
+        if (currentMode === 'completion') return completionDatabase[currentLevel];
+        if (currentMode === 'sentence') return sentenceDatabase[currentLevel];
+        if (currentMode === 'dictation') return dictationDatabase[currentLevel];
+        if (currentMode === 'exam') return examDatabase[currentLevel];
+        return wordPool[currentLevel] || wordPool[1];
+    }
+
+    function updateUI() {
+        document.getElementById("levelSelect").value = currentLevel;
+        document.getElementById("levelStatus").innerText = "Aktif: " + levelNames[currentLevel];
+        var pool = getActivePool();
+        var total = pool ? pool.length : 1;
+        document.getElementById("progressDisplay").innerText = "İçerik: " + (currentQuestionIndex + 1) + "/" + total;
+        document.getElementById("scoreDisplay").innerText = "Puan: " + score;
+        updateLivesDisplay();
+    }
+
+    function updateLivesDisplay() {
+        var hearts = "";
+        for (var i = 0; i < lives; i++) hearts += "❤️";
+        document.getElementById("livesDisplay").innerText = "Can: " + (hearts || "💀");
+    }
+
+    function loseLife() {
+        lives--;
+        updateLivesDisplay();
+        if (lives <= 0) {
+            clearInterval(timerInterval);
+            alert("Oyun Bitti! Canlarınız tükendi. Puanınız sıfırlanıyor.");
+            lives = 5;
+            score = 0;
+            saveUserData();
+            currentQuestionIndex = 0;
+            updateUI();
+            loadQuestion();
+            return true;
+        }
+        return false;
+    }
+
+    function updateScore(delta) {
+        score += delta;
+        if (score < 0) score = 0;
+        saveUserData();
+        document.getElementById("scoreDisplay").innerText = "Puan: " + score;
+    }
+
+    function startTimer(duration) {
+        clearInterval(timerInterval);
+        if (currentMode === 'profile') return;
+        timerSeconds = duration;
+        var timerEl = document.getElementById("timerDisplay");
+        timerEl.innerText = "⏱️ " + timerSeconds + "s";
+
+        timerInterval = setInterval(function() {
+            timerSeconds--;
+            timerEl.innerText = "⏱️ " + timerSeconds + "s";
+            if (timerSeconds <= 0) {
+                clearInterval(timerInterval);
+                alert("Süre Doldu! 1 can kaybettiniz.");
+                updateScore(-5);
+                recordAnswer(false);
+                if (!loseLife()) nextQuestion();
+            }
+        }, 1000);
+    }
+
+    function nextQuestion() {
+        if (currentMode === 'profile') return;
+        var pool = getActivePool();
+        currentQuestionIndex = (currentQuestionIndex + 1) % pool.length;
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        attempts = 0;
+        updateUI();
+        var gameArea = document.getElementById("gameArea");
+        gameArea.innerHTML = "";
+        selectedCards = [];
+        matchedCount = 0;
+
+        if (currentMode === 'profile') {
+            clearInterval(timerInterval);
+            renderProfileMode(gameArea);
+            return;
+        }
+
+        var modeTime = (['puzzle', 'sentence', 'dictation', 'story'].includes(currentMode)) ? 60 : 30;
+        startTimer(modeTime);
+
+        if (currentMode === 'matching_tr') renderMatching('tr', '1. Alıştırma: Arapça Kelime ile Türkçe Anlamını Eşleştirin');
+        else if (currentMode === 'matching_syn') renderMatching('syn', '2. Alıştırma: Eş Anlamlı Kelimeleri Eşleştirin');
+        else if (currentMode === 'matching_ant') renderMatching('ant', '3. Alıştırma: Zıt Anlamlı Kelimeleri Eşleştirin');
+        else if (currentMode === 'puzzle') renderPuzzleMode(gameArea);
+        else if (currentMode === 'completion') renderCompletionMode(gameArea);
+        else if (currentMode === 'sentence') renderSentenceMode(gameArea);
+        else if (currentMode === 'dictation') renderDictationMode(gameArea);
+        else if (currentMode === 'exam') renderExamMode(gameArea);
+        else if (currentMode === 'story') renderStoryMode(gameArea);
+    }
+
+    function toggleHint() {
+        var hintBox = document.getElementById("hintBox");
+        if (hintBox) hintBox.classList.toggle("active");
+    }
+
+    function createArabicKeyboard(targetInputId) {
+        var kbd = document.createElement("div");
+        kbd.className = "arabic-keyboard";
+
+        var rows = [
+            ["ض", "ص", "ث", "ق", "ف", "غ", "ع", "ه", "خ", "ح", "ج", "د"],
+            ["ش", "س", "ي", "ب", "ل", "ا", "ت", "ن", "م", "ك", "ط"],
+            ["ئ", "ء", "ؤ", "ر", "لا", "ى", "ة", "و", "ز", "ظ"]
+        ];
+
+        rows.forEach(function(row) {
+            var rowDiv = document.createElement("div");
+            rowDiv.className = "kbd-row";
+            row.forEach(function(char) {
+                var key = document.createElement("div");
+                key.className = "kbd-key";
+                key.innerText = char;
+                key.onclick = function() {
+                    var activeEl = document.activeElement;
+                    if (activeEl && activeEl.classList.contains("crossword-cell")) {
+                        activeEl.value = char;
+                        var allCells = Array.from(document.querySelectorAll(".crossword-cell"));
+                        var idx = allCells.indexOf(activeEl);
+                        if (idx !== -1 && idx < allCells.length - 1) {
+                            allCells[idx + 1].focus();
+                        }
+                        return;
+                    }
+
+                    var inp = targetInputId ? document.getElementById(targetInputId) : null;
+                    if (inp) inp.value += char;
+                };
+                rowDiv.appendChild(key);
+            });
+            kbd.appendChild(rowDiv);
+        });
+
+        var ctrlRow = document.createElement("div");
+        ctrlRow.className = "kbd-row";
+        
+        var spaceKey = document.createElement("div");
+        spaceKey.className = "kbd-key wide";
+        spaceKey.innerText = "Boşluk";
+        spaceKey.onclick = function() {
+            var activeEl = document.activeElement;
+            if (activeEl && activeEl.classList.contains("crossword-cell")) {
+                activeEl.value = "";
+                return;
+            }
+            var inp = targetInputId ? document.getElementById(targetInputId) : null;
+            if (inp) inp.value += " ";
+        };
+
+        var backKey = document.createElement("div");
+        backKey.className = "kbd-key wide";
+        backKey.innerText = "⌫ Sil";
+        backKey.onclick = function() {
+            var activeEl = document.activeElement;
+            if (activeEl && activeEl.classList.contains("crossword-cell")) {
+                activeEl.value = "";
+                var allCells = Array.from(document.querySelectorAll(".crossword-cell"));
+                var idx = allCells.indexOf(activeEl);
+                if (idx > 0) {
+                    allCells[idx - 1].focus();
+                }
+                return;
+            }
+            var inp = targetInputId ? document.getElementById(targetInputId) : null;
+            if (inp && inp.value.length > 0) inp.value = inp.value.slice(0, -1);
+        };
+
+        ctrlRow.appendChild(spaceKey);
+        ctrlRow.appendChild(backKey);
+        kbd.appendChild(ctrlRow);
+
+        return kbd;
+    }
+
+    function renderNotesList() {
+        var u = usersData[currentUserId];
+        if (!u || !u.notes || u.notes.length === 0) {
+            return '<div style="font-size: 0.85rem; color: #94a3b8; text-align: center; padding: 10px;">Henüz kaydedilmiş genel notunuz bulunmuyor.</div>';
+        }
+        return u.notes.map((n, idx) => `
+            <div class="note-item">
+                <span style="font-size: 0.9rem;">${n}</span>
+                <button class="delete-note-btn" onclick="deleteNote(${idx})">Sil</button>
+            </div>
+        `).join('');
+    }
+
+    function addManualNote() {
+        var inp = document.getElementById('newProfileNote');
+        if (!inp || !inp.value.trim()) return;
+        if (!usersData[currentUserId].notes) usersData[currentUserId].notes = [];
+        
+        usersData[currentUserId].notes.push(inp.value.trim());
+        localStorage.setItem('usersData', JSON.stringify(usersData));
+        inp.value = '';
+        document.getElementById('profileNotesContainer').innerHTML = renderNotesList();
+    }
+
+    function deleteNote(idx) {
+        var u = usersData[currentUserId];
+        if (!u || !u.notes) return;
+        u.notes.splice(idx, 1);
+        localStorage.setItem('usersData', JSON.stringify(usersData));
+        document.getElementById('profileNotesContainer').innerHTML = renderNotesList();
+    }
+
+    function renderProfileMode(gameArea) {
+        if (!currentUserId || !usersData[currentUserId]) {
+            var userKeys = Object.keys(usersData);
+            if (userKeys.length > 0) {
+                currentUserId = userKeys[0];
+            } else {
+                gameArea.innerHTML = '<div style="text-align: center; padding: 30px;"><h3>Kayıtlı Profil Bulunamadı</h3><p>Lütfen profil oluşturmak için sağ üstten veya portaldan giriş yapın.</p><button onclick="document.getElementById(\'portalModal\').style.display=\'flex\'" class="action-btn">Profil Oluştur</button></div>';
+                return;
+            }
+        }
+
+        var user = usersData[currentUserId];
+        var stats = user.stats || { correctAnswers: 0, wrongAnswers: 0, levelProgress: {} };
+        if (!stats.levelProgress) stats.levelProgress = {};
+        
+        var totalAnswers = stats.correctAnswers + stats.wrongAnswers;
+        var ratio = totalAnswers > 0 ? Math.round((stats.correctAnswers / totalAnswers) * 100) : 0;
+
+        var adviceText = ratio >= 80 ? "🔥 Harika gidiyorsunuz! Bu seviyeyi rahatça geçebilir, üst seviye okuma metinlerine geçebilirsiniz." :
+                         ratio >= 50 ? "👍 İyisiniz! Yanlış yaptığınız kelimeleri Sesli Dikte ve Cümle Kurma modunda tekrar etmeniz faydalı olacaktır." :
+                         "💡 Başlangıç aşamasındasınız. Eşleştirme ve Okuma modlarında kelime haznenizi geliştirmeye odaklanmalısınız.";
+
+        var profileHtml = `
+            <div class="profile-container">
+                <div class="profile-header">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div class="avatar">${user.name ? user.name.charAt(0).toUpperCase() : 'K'}</div>
+                        <div>
+                            <h3 style="margin: 0; font-size: 1.4rem; color: var(--primary);">${user.name || ''} ${user.surname || ''}</h3>
+                            <p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.9rem;">${user.email || 'E-posta eklenmemiş'}</p>
+                        </div>
+                    </div>
+                    <button onclick="document.getElementById('portalModal').style.display='flex'" style="padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">🔄 Kullanıcı Değiştir / Sıralama</button>
+                </div>
+
+                <div class="advice-box">
+                    <strong>💡 Sistem Başarı Tavsiyesi:</strong> ${adviceText}
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <h4>Toplam Puan</h4>
+                        <div class="val">${score}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Doğru Sayısı</h4>
+                        <div class="val" style="color: var(--accent);">${stats.correctAnswers}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Yanlış Sayısı</h4>
+                        <div class="val" style="color: var(--danger);">${stats.wrongAnswers}</div>
+                    </div>
+                    <div class="stat-card">
+                        <h4>Başarı Oranı</h4>
+                        <div class="val" style="color: #3b82f6;">%${ratio}</div>
+                    </div>
+                </div>
+
+                <!-- Özel Seviye Çalışma Alanı -->
+                <div class="study-workspace">
+                    <h4>📚 ${levelNames[currentLevel]} İçin Özel Çalışma & Kaynak Alanı</h4>
+                    <p style="font-size: 0.88rem; color: #475569; margin-bottom: 12px;">Şu an aktif olan seviyeniz için harici platformlara doğrudan ulaşın, her tür uzantılı dosyanızı (PDF, Word, Excel, Metin vb.) yükleyin ve **Kalem / Çizim** ile üzerinde çalışın.</p>
+                    
+                    <div class="ext-platforms">
+                        <a href="https://www.youtube.com/results?search_query=Arap%C3%A7a+Dersleri+${levelNames[currentLevel]}" target="_blank" class="ext-btn" style="background: #ef4444;">📺 YouTube'da İzle</a>
+                        <a href="https://quizlet.com/search?query=arabic+${levelNames[currentLevel]}&type=sets" target="_blank" class="ext-btn" style="background: #4f46e5;">🗂️ Quizlet Kartları</a>
+                        <a href="https://translate.google.com/?sl=ar&tl=tr" target="_blank" class="ext-btn" style="background: #0284c7;">🌐 Google Çeviri</a>
+                    </div>
+
+                    <div style="margin-bottom: 15px; background: white; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <label style="font-size: 0.88rem; font-weight: bold; color: #166534;">📁 Dosya Yükle (Tüm Uzantılar Kabul Edilir):</label>
+                        <input type="file" id="studyFileInput" onchange="uploadStudyFile()" style="margin-top: 5px; display: block; font-size: 0.85rem;">
+                    </div>
+
+                    <div style="background: white; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <label style="font-size: 0.88rem; font-weight: bold; color: #166534;">📝 ${levelNames[currentLevel]} İçin Özel Not Ekleyin:</label>
+                        <div style="display: flex; gap: 8px; margin-top: 5px;">
+                            <input type="text" id="levelNoteInput" placeholder="Bu seviyeye özel notunuzu yazın..." style="flex: 1; padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                            <button onclick="addLevelNote()" style="padding: 8px 14px; background: var(--accent); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Kaydet</button>
+                        </div>
+                    </div>
+
+                    <div id="levelWorkspaceContent" style="margin-top: 15px;">
+                        ${renderLevelWorkspace()}
+                    </div>
+                </div>
+
+                <h4 style="color: var(--primary); margin-bottom: 15px;">📊 Seviye İlerlemeleri</h4>
+                <div class="level-progress-list">
+                    ${[1, 2, 3, 4, 5, 6].map(lvl => `
+                        <div class="progress-item">
+                            <div class="progress-label">
+                                <span>${levelNames[lvl]}</span>
+                                <span>%${stats.levelProgress[lvl] || 0}</span>
+                            </div>
+                            <div class="progress-bar-bg">
+                                <div class="progress-bar-fill" style="width: ${stats.levelProgress[lvl] || 0}%;"></div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <h4 style="color: var(--primary); margin-bottom: 10px;">📌 Genel Notlar</h4>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                    <input type="text" id="newProfileNote" placeholder="Genel not ekleyin..." style="flex: 1; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                    <button onclick="addManualNote()" style="padding: 10px 15px; background: var(--accent); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer;">Ekle</button>
+                </div>
+                <div class="profile-notes-list" id="profileNotesContainer">
+                    ${renderNotesList()}
+                </div>
+            </div>
+        `;
+
+        gameArea.innerHTML = profileHtml;
+    }
+
+    function uploadStudyFile() {
+        var inp = document.getElementById('studyFileInput');
+        if (!inp.files || !inp.files[0]) return;
+        var file = inp.files[0];
+
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            if (!usersData[currentUserId].levelUploads) usersData[currentUserId].levelUploads = {};
+            if (!usersData[currentUserId].levelUploads[currentLevel]) usersData[currentUserId].levelUploads[currentLevel] = [];
+
+            usersData[currentUserId].levelUploads[currentLevel].push({
+                name: file.name,
+                type: file.type || "application/octet-stream",
+                dataUrl: e.target.result,
+                date: new Date().toLocaleDateString()
+            });
+
+            localStorage.setItem('usersData', JSON.stringify(usersData));
+            document.getElementById('levelWorkspaceContent').innerHTML = renderLevelWorkspace();
+            inp.value = '';
+        };
+
+        reader.readAsDataURL(file);
+    }
+
+    function addLevelNote() {
+        var inp = document.getElementById('levelNoteInput');
+        if (!inp || !inp.value.trim()) return;
+
+        if (!usersData[currentUserId].levelNotes) usersData[currentUserId].levelNotes = {};
+        if (!usersData[currentUserId].levelNotes[currentLevel]) usersData[currentUserId].levelNotes[currentLevel] = [];
+
+        usersData[currentUserId].levelNotes[currentLevel].push(inp.value.trim());
+        localStorage.setItem('usersData', JSON.stringify(usersData));
+        inp.value = '';
+        document.getElementById('levelWorkspaceContent').innerHTML = renderLevelWorkspace();
+    }
+
+    function renderLevelWorkspace() {
+        var u = usersData[currentUserId];
+        if (!u) return '';
+        var files = (u.levelUploads && u.levelUploads[currentLevel]) || [];
+        var notes = (u.levelNotes && u.levelNotes[currentLevel]) || [];
+
+        var html = '<div style="background: white; padding: 12px; border-radius: 6px; border: 1px solid #cbd5e1;">';
+        html += '<strong style="font-size: 0.9rem; color: #334155;">' + levelNames[currentLevel] + ' Kaydedilen Dosyalar & Notlar (Tıklayarak Önizleyin ve Kalemle Çalışın):</strong>';
+        
+        if (files.length === 0 && notes.length === 0) {
+            html += '<div style="font-size: 0.8rem; color: #94a3b8; margin-top: 5px;">Henüz bu seviye için yüklenmiş dosya veya not bulunmuyor.</div>';
+        } else {
+            files.forEach((f, idx) => {
+                html += `
+                    <div class="file-link-item" onclick="openFileViewer(${currentLevel}, ${idx})" style="cursor: pointer;">
+                        <div>📎 <strong>Dosya:</strong> <span style="color: #0284c7; text-decoration: underline;">${f.name}</span> <span style="font-size:0.75rem; color:#64748b;">(${f.date})</span></div>
+                        <span style="font-size: 0.8rem; background: #e2e8f0; padding: 3px 8px; border-radius: 4px; font-weight: bold;">🔍 İçeriği Aç & Kalemle Çiz</span>
+                    </div>
+                `;
+            });
+            notes.forEach((n, idx) => {
+                html += `<div style="font-size: 0.85rem; color: #166534; margin-top: 6px;">✏️ <strong>Not:</strong> ${n}</div>`;
+            });
+        }
+        html += '</div>';
+        return html;
+    }
+
+    function openFileViewer(level, fileIdx) {
+        var u = usersData[currentUserId];
+        if (!u || !u.levelUploads || !u.levelUploads[level] || !u.levelUploads[level][fileIdx]) return;
+        var fileObj = u.levelUploads[level][fileIdx];
+
+        document.getElementById('viewerModalTitle').innerText = "📄 " + fileObj.name + " (İçerik Önizleme & Kalem Çalışması)";
+        var previewEl = document.getElementById('fileContentPreview');
+        
+        var fileName = (fileObj.name || "").toLowerCase();
+        var fileType = (fileObj.type || "").toLowerCase();
+
+        // 1. Resim dosyaları
+        if (fileType.includes('image') || fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp') || fileName.endsWith('.gif')) {
+            previewEl.innerHTML = `<img src="${fileObj.dataUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
+        } 
+        // 2. PDF dosyaları
+        else if (fileType.includes('pdf') || fileName.endsWith('.pdf')) {
+            previewEl.innerHTML = `<object data="${fileObj.dataUrl}" type="application/pdf" width="100%" height="100%">
+                <div style="padding: 20px;">Tarayıcınız PDF önizlemesini doğrudan desteklemiyor. Dosyayı görüntülemek için <a href="${fileObj.dataUrl}" download="${fileObj.name}" style="color:#0284c7; font-weight:bold;">buraya tıklayarak indirebilirsiniz</a>.</div>
+            </object>`;
+        } 
+        // 3. Metin dosyaları (.txt, .csv, .html vb.)
+        else if (fileType.includes('text') || fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.json') || fileName.endsWith('.html')) {
+            try {
+                var base64Data = fileObj.dataUrl.split(',')[1];
+                var decodedText = decodeURIComponent(escape(atob(base64Data)));
+                previewEl.innerHTML = `<div style="text-align: left; width: 100%; height: 100%; overflow: auto; white-space: pre-wrap; font-family: monospace; font-size: 0.95rem; padding: 15px; background: #fff;">${decodedText}</div>`;
+            } catch(e) {
+                previewEl.innerHTML = `<iframe src="${fileObj.dataUrl}" style="width:100%; height:100%; border:none; background:white;"></iframe>`;
+            }
+        } 
+        // 4. Diğer tüm uzantılar (Word .doc, .docx, Excel .xls, .xlsx, sunumlar ve diğer tüm dosyalar)
+        else {
+            previewEl.innerHTML = `
+                <div style="display: flex; flexDirection: column; align-items: center; justify-content: center; gap: 15px; padding: 30px; width: 100%; height: 100%; background: #ffffff;">
+                    <div style="font-size: 3rem;">📦</div>
+                    <h3 style="margin: 0; color: var(--primary);">Dosya Yüklendi ve Hazır: ${fileObj.name}</h3>
+                    <p style="color: #64748b; font-size: 0.95rem; max-width: 450px; line-height: 1.5; margin: 0;">
+                        Bu uzantıya sahip dosyalar (Word, Excel, Arşiv vb.) tarayıcının kendi güvenli alanı içinde doğrudan ham metin olarak görüntülenemez, ancak bellekte güvendedir.<br>İçeriği incelemek, düzenlemek veya dışa aktarmak için aşağıdaki butonu kullanabilirsiniz.
+                    </p>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <a href="${fileObj.dataUrl}" download="${fileObj.name}" style="padding: 12px 24px; background: var(--accent); color: white; text-decoration: none; border-radius: 8px; font-weight: bold; font-size: 1rem; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">📥 Dosyayı İndir & Tam Aç</a>
+                    </div>
+                </div>
+            `;
+        }
+
+        document.getElementById('fileViewerModal').style.display = 'flex';
+        setTimeout(resizeCanvas, 100);
+    }
+
+    function closeFileViewer() {
+        document.getElementById('fileViewerModal').style.display = 'none';
+    }
+
+    // Çizim / Kalem Fonksiyonları
+    function initCanvasDrawing() {
+        var canvas = document.getElementById('pdfCanvas');
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+
+        function getPosition(e) {
+            var rect = canvas.getBoundingClientRect();
+            var clientX = e.clientX;
+            var clientY = e.clientY;
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            }
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+
+        function startPosition(e) {
+            if (!isDrawingActive) return;
+            isDrawing = true;
+            var pos = getPosition(e);
+            lastX = pos.x;
+            lastY = pos.y;
+            e.preventDefault();
+        }
+
+        function draw(e) {
+            if (!isDrawing || !isDrawingActive) return;
+            var pos = getPosition(e);
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(pos.x, pos.y);
+            ctx.strokeStyle = document.getElementById('penColor').value;
+            ctx.lineWidth = parseInt(document.getElementById('penSize').value);
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            lastX = pos.x;
+            lastY = pos.y;
+            e.preventDefault();
+        }
+
+        function endPosition() {
+            isDrawing = false;
+        }
+
+        canvas.addEventListener('mousedown', startPosition);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', endPosition);
+        canvas.addEventListener('mouseleave', endPosition);
+
+        canvas.addEventListener('touchstart', startPosition, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', endPosition);
+    }
+
+    function setDrawingMode(active) {
+        isDrawingActive = active;
+        var penBtn = document.getElementById('penToolBtn');
+        var panBtn = document.getElementById('panToolBtn');
+        var canvas = document.getElementById('pdfCanvas');
+
+        if (active) {
+            penBtn.classList.add('active');
+            panBtn.classList.remove('active');
+            canvas.style.pointerEvents = 'auto';
+        } else {
+            panBtn.classList.add('active');
+            penBtn.classList.remove('active');
+            canvas.style.pointerEvents = 'none';
+        }
+    }
+
+    function clearCanvas() {
+        var canvas = document.getElementById('pdfCanvas');
+        if (!canvas) return;
+        var ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function resizeCanvas() {
+        var canvas = document.getElementById('pdfCanvas');
+        var container = document.getElementById('canvasContainer');
+        if (!canvas || !container) return;
+        
+        var ctx = canvas.getContext('2d');
+        var savedData = null;
+        try {
+            savedData = ctx.getImageData(0, 0, canvas.width || 100, canvas.height || 100);
+        } catch(e) {}
+
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+
+        if (savedData) {
+            try {
+                ctx.putImageData(savedData, 0, 0);
+            } catch(e) {}
+        }
+    }
+
+    function renderMatching(type, instructionText) {
+        var gameArea = document.getElementById("gameArea");
+        var pool = wordPool[currentLevel] || wordPool[1];
+        var currentSet = pool.slice(0, 4);
+
+        var instruction = document.createElement("div");
+        instruction.className = "instruction-box";
+        instruction.innerText = instructionText;
+        gameArea.appendChild(instruction);
+
+        var leftList = [], rightList = [];
+        for (var i = 0; i < currentSet.length; i++) {
+            var item = currentSet[i];
+            leftList.push({ id: i, text: item.ar, tr: item.tr, isTurkish: false });
+            if (type === 'tr') rightList.push({ id: i, text: item.tr, tr: item.tr, isTurkish: true });
+            else if (type === 'syn') rightList.push({ id: i, text: item.syn, tr: item.synTr, isTurkish: false });
+            else if (type === 'ant') rightList.push({ id: i, text: item.ant, tr: item.antTr, isTurkish: false });
+        }
+
+        leftList.sort(function() { return 0.5 - Math.random(); });
+        rightList.sort(function() { return 0.5 - Math.random(); });
+
+        var grid = document.createElement("div");
+        grid.className = "match-grid";
+        var leftCol = document.createElement("div");
+        leftCol.className = "match-column";
+        var rightCol = document.createElement("div");
+        rightCol.className = "match-column";
+
+        for (var j = 0; j < leftList.length; j++) leftCol.appendChild(createCard(leftList[j], 'left'));
+        for (var k = 0; k < rightList.length; k++) rightCol.appendChild(createCard(rightList[k], 'right'));
+
+        grid.appendChild(leftCol);
+        grid.appendChild(rightCol);
+        gameArea.appendChild(grid);
+    }
+
+    function createCard(data, side) {
+        var card = document.createElement("div");
+        card.className = "match-card" + (data.isTurkish ? " turkish" : "");
+        card.dataset.id = data.id;
+        card.dataset.side = side;
+
+        card.innerHTML = data.text + (!data.isTurkish ? ' <span class="audio-icon" onclick="event.stopPropagation(); speakArabic(\'' + data.text + '\')">🔊</span>' : '');
+        
+        if (!data.isTurkish) {
+            var popup = document.createElement("div");
+            popup.className = "card-popup";
+            popup.innerText = data.tr;
+            card.appendChild(popup);
+        }
+
+        card.onclick = function() {
+            if (card.classList.contains('matched') || card.classList.contains('selected')) return;
+
+            if (selectedCards.length === 1 && selectedCards[0].dataset.side === side) {
+                selectedCards[0].classList.remove('selected');
+                selectedCards = [];
+            }
+
+            card.classList.add('selected');
+            selectedCards.push(card);
+
+            if (selectedCards.length === 2) {
+                var card1 = selectedCards[0];
+                var card2 = selectedCards[1];
+
+                if (card1.dataset.id === card2.dataset.id) {
+                    card1.classList.add('matched');
+                    card2.classList.add('matched');
+                    matchedCount++;
+                    updateScore(5);
+                    recordAnswer(true);
+
+                    if (matchedCount === 4) {
+                        setTimeout(function() {
+                            alert("Tebrikler! Tüm eşleştirmeleri başardınız (+10 Bonus Puan)");
+                            updateScore(10);
+                            nextQuestion();
+                        }, 300);
+                    }
+                } else {
+                    updateScore(-5);
+                    recordAnswer(false);
+                    setTimeout(function() {
+                        card1.classList.remove('selected');
+                        card2.classList.remove('selected');
+                    }, 400);
+                }
+                selectedCards = [];
+            }
+        };
+
+        return card;
+    }
+
+    function renderPuzzleMode(gameArea) {
+        var card = document.createElement("div");
+        card.className = "exercise-card";
+
+        var pool = puzzleDatabase[currentLevel] || puzzleDatabase[1];
+        var q = pool[currentQuestionIndex % pool.length];
+
+        if (currentLevel <= 2) {
+            var instruction = document.createElement("div");
+            instruction.className = "instruction-box";
+            instruction.innerText = "Görsele Ait Arapça Kelimeyi Yazın (" + (currentQuestionIndex + 1) + "/" + pool.length + ")";
+
+            var iconDiv = document.createElement("div");
+            iconDiv.className = "puzzle-img";
+            iconDiv.innerText = q.icon;
+
+            var hintBox = document.createElement("div");
+            hintBox.className = "hint-box";
+            hintBox.id = "hintBox";
+            hintBox.innerHTML = "<strong>💡 Detaylı İpucu:</strong><br>" + q.hint;
+
+            var hintBtn = document.createElement("button");
+            hintBtn.className = "hint-btn";
+            hintBtn.innerHTML = "💡 İpucu";
+            hintBtn.onclick = toggleHint;
+
+            var input = document.createElement("input");
+            input.type = "text";
+            input.id = "puzzleInput";
+            input.className = "diktat-input";
+            input.placeholder = "Arapça karşılığı...";
+
+            var kbd = createArabicKeyboard("puzzleInput");
+
+            var attemptsDiv = document.createElement("div");
+            attemptsDiv.className = "attempts-badge";
+            attemptsDiv.id = "attemptsDisplay";
+            attemptsDiv.innerText = "Kalan Hak: " + (3 - attempts);
+
+            var submitBtn = document.createElement("button");
+            submitBtn.className = "submit-btn";
+            submitBtn.innerText = "Kontrol Et";
+            submitBtn.onclick = function() {
+                if (input.value.trim() === q.word) {
+                    updateScore(15);
+                    recordAnswer(true);
+                    alert("Tebrikler! Doğru cevap (+15 Puan)");
+                    nextQuestion();
+                } else {
+                    attempts++;
+                    updateScore(-5);
+                    recordAnswer(false);
+                    if (attempts >= 3) {
+                        alert("3 kez yanlış bildiniz! 1 Can Kaybettiniz. Doğru Cevap: " + q.word);
+                        if (!loseLife()) nextQuestion();
+                    } else {
+                        document.getElementById("attemptsDisplay").innerText = "Kalan Hak: " + (3 - attempts);
+                        alert("Yanlış cevap (-5 Puan). Tekrar deneyin.");
+                    }
+                }
+            };
+
+            card.appendChild(hintBtn);
+            card.appendChild(instruction);
+            card.appendChild(hintBox);
+            card.appendChild(iconDiv);
+            card.appendChild(input);
+            card.appendChild(kbd);
+            card.appendChild(attemptsDiv);
+            card.appendChild(submitBtn);
+        } else {
+            var instruction = document.createElement("div");
+            instruction.className = "instruction-box";
+            instruction.innerText = q.title + " (" + (currentQuestionIndex + 1) + "/" + pool.length + ")";
+
+            var hintBox = document.createElement("div");
+            hintBox.className = "hint-box";
+            hintBox.id = "hintBox";
+            hintBox.innerHTML = "<strong>💡 Detaylı İpucu:</strong><br>" + q.hintDetail;
+
+            var hintBtn = document.createElement("button");
+            hintBtn.className = "hint-btn";
+            hintBtn.innerHTML = "💡 İpucu";
+            hintBtn.onclick = toggleHint;
+
+            var hintsDiv = document.createElement("div");
+            hintsDiv.className = "crossword-hints";
+            var hintsList = "<strong>Çengel İpuçları:</strong><ul>";
+            q.hints.forEach(function(h) { hintsList += "<li>" + h + "</li>"; });
+            hintsList += "</ul>";
+            hintsDiv.innerHTML = hintsList;
+
+            var gridDiv = document.createElement("div");
+            gridDiv.className = "crossword-grid";
+
+            var inputs = [];
+            for (var r = 0; r < q.grid.length; r++) {
+                inputs[r] = [];
+                for (var c = 0; c < q.grid[r].length; c++) {
+                    var val = q.grid[r][c];
+                    if (val === '■') {
+                        var block = document.createElement("div");
+                        block.className = "crossword-cell block";
+                        gridDiv.appendChild(block);
+                    } else {
+                        var cell = document.createElement("input");
+                        cell.type = "text";
+                        cell.maxLength = 1;
+                        cell.className = "crossword-cell";
+                        gridDiv.appendChild(cell);
+                        inputs[r][c] = cell;
+                    }
+                }
+            }
+
+            var kbd = createArabicKeyboard(null);
+
+            var attemptsDiv = document.createElement("div");
+            attemptsDiv.className = "attempts-badge";
+            attemptsDiv.id = "attemptsDisplay";
+            attemptsDiv.innerText = "Kalan Hak: " + (3 - attempts);
+
+            var submitBtn = document.createElement("button");
+            submitBtn.className = "submit-btn";
+            submitBtn.innerText = "Bulmacayı Kontrol Et";
+            submitBtn.onclick = function() {
+                var isCorrect = true;
+                for (var r = 0; r < q.grid.length; r++) {
+                    for (var c = 0; c < q.grid[r].length; c++) {
+                        if (q.grid[r][c] !== '■') {
+                            if (inputs[r][c].value.trim() !== q.grid[r][c]) {
+                                isCorrect = false;
+                            }
+                        }
+                    }
+                }
+                if (isCorrect) {
+                    updateScore(20);
+                    recordAnswer(true);
+                    alert("Tebrikler! Çengel bulmacayı çözdünüz (+20 Puan)");
+                    nextQuestion();
+                } else {
+                    attempts++;
+                    updateScore(-5);
+                    recordAnswer(false);
+                    if (attempts >= 3) {
+                        alert("3 kez yanlış bildiniz! 1 Can Kaybettiniz. Doğru Kelimeler: " + q.solution.join(" - "));
+                        if (!loseLife()) nextQuestion();
+                    } else {
+                        document.getElementById("attemptsDisplay").innerText = "Kalan Hak: " + (3 - attempts);
+                        alert("Bulmacada hatalar var (-5 Puan). Tekrar deneyin.");
+                    }
+                }
+            };
+
+            card.appendChild(hintBtn);
+            card.appendChild(instruction);
+            card.appendChild(hintBox);
+            card.appendChild(hintsDiv);
+            card.appendChild(gridDiv);
+            card.appendChild(kbd);
+            card.appendChild(attemptsDiv);
+            card.appendChild(submitBtn);
+        }
+
+        gameArea.appendChild(card);
+    }
+
+    function renderCompletionMode(gameArea) {
+        var pool = completionDatabase[currentLevel] || completionDatabase[1];
+        var q = pool[currentQuestionIndex % pool.length];
+
+        var card = document.createElement("div");
+        card.className = "exercise-card";
+
+        var hintBtn = document.createElement("button");
+        hintBtn.className = "hint-btn";
+        hintBtn.innerHTML = "💡 İpucu";
+        hintBtn.onclick = toggleHint;
+
+        var instruction = document.createElement("div");
+        instruction.className = "instruction-box";
+        instruction.innerText = "Boşluğa Uygun Olan Kelimeyi Seçin (" + (currentQuestionIndex + 1) + "/" + pool.length + ")";
+
+        var hintBox = document.createElement("div");
+        hintBox.className = "hint-box";
+        hintBox.id = "hintBox";
+        hintBox.innerHTML = "<strong>💡 Detaylı İpucu:</strong><br>" + q.hint;
+
+        var sentence = document.createElement("div");
+        sentence.className = "sentence-display";
+        sentence.innerText = q.sentence;
+
+        var attemptsDiv = document.createElement("div");
+        attemptsDiv.className = "attempts-badge";
+        attemptsDiv.id = "attemptsDisplay";
+        attemptsDiv.innerText = "Kalan Hak: " + (3 - attempts);
+
+        var optionsGrid = document.createElement("div");
+        optionsGrid.className = "options-grid";
+
+        q.options.forEach(function(opt) {
+            var btn = document.createElement("button");
+            btn.className = "opt-btn";
+            btn.innerText = opt;
+            btn.onclick = function() {
+                if (opt === q.correct) {
+                    updateScore(10);
+                    recordAnswer(true);
+                    alert("Tebrikler! Doğru cevap (+10 Puan)");
+                    nextQuestion();
+                } else {
+                    attempts++;
+                    updateScore(-5);
+                    recordAnswer(false);
+                    if (attempts >= 3) {
+                        alert("3 kez yanlış seçtiniz! 1 Can Kaybettiniz. Doğru cevap: " + q.correct);
+                        if (!loseLife()) nextQuestion();
+                    } else {
+                        document.getElementById("attemptsDisplay").innerText = "Kalan Hak: " + (3 - attempts);
+                        alert("Yanlış cevap (-5 Puan). Tekrar deneyin.");
+                    }
+                }
+            };
+            optionsGrid.appendChild(btn);
+        });
+
+        card.appendChild(hintBtn);
+        card.appendChild(instruction);
+        card.appendChild(hintBox);
+        card.appendChild(sentence);
+        card.appendChild(attemptsDiv);
+        card.appendChild(optionsGrid);
+        gameArea.appendChild(card);
+    }
+
+    function renderSentenceMode(gameArea) {
+        selectedSentenceWords = [];
+        var pool = sentenceDatabase[currentLevel] || sentenceDatabase[1];
+        var q = pool[currentQuestionIndex % pool.length];
+
+        var card = document.createElement("div");
+        card.className = "exercise-card";
+
+        var hintBtn = document.createElement("button");
+        hintBtn.className = "hint-btn";
+        hintBtn.innerHTML = "💡 İpucu";
+        hintBtn.onclick = toggleHint;
+
+        var instruction = document.createElement("div");
+        instruction.className = "instruction-box";
+        instruction.innerText = "Kelimelere Tıklayarak Doğru Cümleyi Oluşturun (" + (currentQuestionIndex + 1) + "/" + pool.length + ")";
+
+        var hintBox = document.createElement("div");
+        hintBox.className = "hint-box";
+        hintBox.id = "hintBox";
+        hintBox.innerHTML = "<strong>💡 Detaylı İpucu:</strong><br>" + q.hint;
+
+        var targetArea = document.createElement("div");
+        targetArea.className = "sentence-target";
+        targetArea.id = "sentenceTarget";
+
+        var wordPoolDiv = document.createElement("div");
+        wordPoolDiv.className = "word-pool";
+
+        var shuffledWords = q.words.slice().sort(function() { return 0.5 - Math.random(); });
+
+        shuffledWords.forEach(function(word) {
+            var chip = document.createElement("div");
+            chip.className = "word-chip";
+            chip.innerText = word;
+            chip.onclick = function() {
+                speakArabic(word);
+                selectedSentenceWords.push(word);
+                renderSentenceTarget();
+                chip.style.visibility = "hidden";
+            };
+            wordPoolDiv.appendChild(chip);
+        });
+
+        var attemptsDiv = document.createElement("div");
+        attemptsDiv.className = "attempts-badge";
+        attemptsDiv.id = "attemptsDisplay";
+        attemptsDiv.innerText = "Kalan Hak: " + (3 - attempts);
+
+        var checkBtn = document.createElement("button");
+        checkBtn.className = "submit-btn";
+        checkBtn.innerText = "Kontrol Et";
+        checkBtn.onclick = function() {
+            var userSentence = selectedSentenceWords.join(" ");
+            if (userSentence === q.correct) {
+                updateScore(15);
+                recordAnswer(true);
+                alert("Mükemmel! Cümleyi doğru kurdunuz (+15 Puan)");
+                nextQuestion();
+            } else {
+                attempts++;
+                updateScore(-5);
+                recordAnswer(false);
+                if (attempts >= 3) {
+                    alert("3 kez yanlış kurdunuz! 1 Can Kaybettiniz. Doğru Cümle:\n" + q.correct);
+                    if (!loseLife()) nextQuestion();
+                } else {
+                    alert("Cümle sırası hatalı (-5 Puan). Sıfırlanıyor...");
+                    renderSentenceMode(gameArea);
+                }
+            }
+        };
+
+        card.appendChild(hintBtn);
+        card.appendChild(instruction);
+        card.appendChild(hintBox);
+        card.appendChild(targetArea);
+        card.appendChild(wordPoolDiv);
+        card.appendChild(attemptsDiv);
+        card.appendChild(checkBtn);
+        gameArea.appendChild(card);
+    }
+
+    function renderSentenceTarget() {
+        var targetArea = document.getElementById("sentenceTarget");
+        targetArea.innerHTML = "";
+        selectedSentenceWords.forEach(function(w) {
+            var chip = document.createElement("div");
+            chip.className = "word-chip";
+            chip.innerText = w;
+            targetArea.appendChild(chip);
+        });
+    }
+
+    function renderDictationMode(gameArea) {
+        var pool = dictationDatabase[currentLevel] || dictationDatabase[1];
+        var q = pool[currentQuestionIndex % pool.length];
+
+        var card = document.createElement("div");
+        card.className = "exercise-card";
+
+        var hintBtn = document.createElement("button");
+        hintBtn.className = "hint-btn";
+        hintBtn.innerHTML = "💡 İpucu";
+        hintBtn.onclick = toggleHint;
+
+        var instruction = document.createElement("div");
+        instruction.className = "instruction-box";
+        instruction.innerText = "Sesi Dinleyin ve Duyduğunuz Arapça İfadeyi Yazın (" + (currentQuestionIndex + 1) + "/" + pool.length + ")";
+
+        var hintBox = document.createElement("div");
+        hintBox.className = "hint-box";
+        hintBox.id = "hintBox";
+        hintBox.innerHTML = "<strong>💡 Detaylı İpucu:</strong><br>" + q.hint;
+
+        var btnGroup = document.createElement("div");
+        btnGroup.className = "audio-buttons-group";
+
+        var listenBtn = document.createElement("button");
+        listenBtn.className = "listen-btn";
+        listenBtn.innerHTML = "🔊 Normal Dinle";
+        listenBtn.onclick = function() {
+            speakArabic(q.ar, 0.8);
+        };
+
+        var slowListenBtn = document.createElement("button");
+        slowListenBtn.className = "listen-btn slow";
+        slowListenBtn.innerHTML = "🐢 Yavaş Dinle";
+        slowListenBtn.onclick = function() {
+            speakArabic(q.ar, 0.4);
+        };
+
+        btnGroup.appendChild(listenBtn);
+        btnGroup.appendChild(slowListenBtn);
+
+        var input = document.createElement("input");
+        input.type = "text";
+        input.id = "dictationInput";
+        input.className = "diktat-input";
+        input.placeholder = "Arapça metni yazın...";
+
+        var kbd = createArabicKeyboard("dictationInput");
+
+        var attemptsDiv = document.createElement("div");
+        attemptsDiv.className = "attempts-badge";
+        attemptsDiv.id = "attemptsDisplay";
+        attemptsDiv.innerText = "Kalan Hak: " + (3 - attempts);
+
+        var submitBtn = document.createElement("button");
+        submitBtn.className = "submit-btn";
+        submitBtn.innerText = "Cevabı Kontrol Et";
+        submitBtn.onclick = function() {
+            var userText = input.value.trim();
+            if (userText === q.ar) {
+                updateScore(15);
+                recordAnswer(true);
+                alert("Tebrikler! Doğru yazdınız (+15 Puan)");
+                nextQuestion();
+            } else {
+                attempts++;
+                updateScore(-5);
+                recordAnswer(false);
+                if (attempts >= 3) {
+                    alert("3 kez yanlış yazdınız! 1 Can Kaybettiniz. Doğru Yazım: " + q.ar);
+                    if (!loseLife()) nextQuestion();
+                } else {
+                    document.getElementById("attemptsDisplay").innerText = "Kalan Hak: " + (3 - attempts);
+                    alert("Hatalı yazım (-5 Puan). Tekrar deneyin.");
+                }
+            }
+        };
+
+        card.appendChild(hintBtn);
+        card.appendChild(instruction);
+        card.appendChild(hintBox);
+        card.appendChild(btnGroup);
+        card.appendChild(input);
+        card.appendChild(kbd);
+        card.appendChild(attemptsDiv);
+        card.appendChild(submitBtn);
+        gameArea.appendChild(card);
+    }
+
+    function renderExamMode(gameArea) {
+        var pool = examDatabase[currentLevel] || examDatabase[1];
+        var q = pool[currentQuestionIndex % pool.length];
+
+        var card = document.createElement("div");
+        card.className = "exercise-card";
+
+        var hintBtn = document.createElement("button");
+        hintBtn.className = "hint-btn";
+        hintBtn.innerHTML = "💡 İpucu";
+        hintBtn.onclick = toggleHint;
+
+        var instruction = document.createElement("div");
+        instruction.className = "instruction-box";
+        instruction.innerText = "Seviye Değerlendirme Testi (" + (currentQuestionIndex + 1) + "/" + pool.length + ")";
+
+        var hintBox = document.createElement("div");
+        hintBox.className = "hint-box";
+        hintBox.id = "hintBox";
+        hintBox.innerHTML = "<strong>💡 Detaylı İpucu:</strong><br>" + q.hint;
+
+        var questionEl = document.createElement("div");
+        questionEl.className = "sentence-display";
+        questionEl.style.fontSize = "1.3rem";
+        questionEl.innerText = q.question;
+
+        var attemptsDiv = document.createElement("div");
+        attemptsDiv.className = "attempts-badge";
+        attemptsDiv.id = "attemptsDisplay";
+        attemptsDiv.innerText = "Kalan Hak: " + (3 - attempts);
+
+        var optionsGrid = document.createElement("div");
+        optionsGrid.className = "options-grid";
+
+        q.options.forEach(function(opt) {
+            var btn = document.createElement("button");
+            btn.className = "opt-btn";
+            btn.innerText = opt;
+            btn.onclick = function() {
+                if (opt === q.correct) {
+                    updateScore(10);
+                    recordAnswer(true);
+                    alert("Tebrikler! Doğru cevap (+10 Puan)");
+                    nextQuestion();
+                } else {
+                    attempts++;
+                    updateScore(-5);
+                    recordAnswer(false);
+                    if (attempts >= 3) {
+                        alert("3 kez yanlış yaptınız! 1 Can Kaybettiniz. Doğru cevap: " + q.correct);
+                        if (!loseLife()) nextQuestion();
+                    } else {
+                        document.getElementById("attemptsDisplay").innerText = "Kalan Hak: " + (3 - attempts);
+                        alert("Yanlış cevap (-5 Puan). Tekrar deneyin.");
+                    }
+                }
+            };
+            optionsGrid.appendChild(btn);
+        });
+
+        card.appendChild(hintBtn);
+        card.appendChild(instruction);
+        card.appendChild(hintBox);
+        card.appendChild(questionEl);
+        card.appendChild(attemptsDiv);
+        card.appendChild(optionsGrid);
+        gameArea.appendChild(card);
+    }
+
+    function renderStoryMode(gameArea) {
+        var pool = storyDatabase[currentLevel] || storyDatabase[1];
+        var s = pool[currentQuestionIndex % pool.length];
+
+        var container = document.createElement("div");
+        container.className = "story-container";
+
+        var storyBox = document.createElement("div");
+        storyBox.className = "story-box";
+
+        var title = document.createElement("div");
+        title.className = "story-title";
+        title.innerHTML = s.titleTr + ' <span class="ar-title">(' + s.titleAr + ')</span>';
+
+        var textDiv = document.createElement("div");
+        textDiv.className = "story-text";
+
+        var words = s.text.split(" ");
+        words.forEach(function(w) {
+            var cleanWord = w.replace(/[.,!؟]/g, "");
+            var span = document.createElement("span");
+            span.className = "clickable-word";
+            span.innerText = w + " ";
+
+            if (s.dict && s.dict[cleanWord]) {
+                var popup = document.createElement("div");
+                popup.className = "card-popup";
+                popup.innerText = s.dict[cleanWord];
+                span.appendChild(popup);
+
+                span.onclick = function(e) {
+                    e.stopPropagation();
+                    document.querySelectorAll('.clickable-word').forEach(function(el) {
+                        if(el !== span) el.classList.remove('active-word');
+                    });
+                    span.classList.toggle('active-word');
+                    speakArabic(cleanWord);
+                };
+            } else {
+                span.onclick = function(e) {
+                    e.stopPropagation();
+                    speakArabic(cleanWord);
+                };
+            }
+            textDiv.appendChild(span);
+        });
+
+        storyBox.appendChild(title);
+        storyBox.appendChild(textDiv);
+
+        var notesSection = document.createElement("div");
+        notesSection.className = "notes-section";
+
+        var trBox = document.createElement("div");
+        trBox.className = "note-box";
+        trBox.innerHTML = "<label>Türkçe Metin / Çeviri:</label><textarea readonly>" + s.tr + "</textarea>";
+
+        var personalBox = document.createElement("div");
+        personalBox.className = "note-box";
+        
+        var savedNote = "";
+        if (currentUserId && usersData[currentUserId] && usersData[currentUserId].notes) {
+            savedNote = usersData[currentUserId].notes.find(n => n.startsWith("[" + s.id + "]")) || "";
+            if (savedNote) savedNote = savedNote.replace("[" + s.id + "] ", "");
+        }
+
+        personalBox.innerHTML = "<label>Kişisel Notlarınız:</label>" +
+            "<textarea id='storyNote' placeholder='Kelime veya notlarınızı buraya yazabilirsiniz...'>" + savedNote + "</textarea>" +
+            "<div class='save-status' id='saveStatus'></div>";
+
+        notesSection.appendChild(trBox);
+        notesSection.appendChild(personalBox);
+
+        var quizBox = document.createElement("div");
+        quizBox.className = "quiz-box";
+
+        var hintBtn = document.createElement("button");
+        hintBtn.className = "hint-btn";
+        hintBtn.innerHTML = "💡 İpucu";
+        hintBtn.onclick = toggleHint;
+
+        var hintBox = document.createElement("div");
+        hintBox.className = "hint-box";
+        hintBox.id = "hintBox";
+        hintBox.innerHTML = "<strong>💡 Detaylı İpucu:</strong><br>" + (s.quiz.hint || "Soru metnindeki ipuçlarını dikkatlice inceleyin.");
+
+        var quizTitle = document.createElement("div");
+        quizTitle.className = "quiz-title";
+        quizTitle.innerText = "📝 Metin Anlama Sorusu:";
+
+        var question = document.createElement("div");
+        question.className = "quiz-question";
+        question.innerText = s.quiz.question;
+
+        var optionsGrid = document.createElement("div");
+        optionsGrid.className = "options-grid";
+
+        s.quiz.options.forEach(function(opt, idx) {
+            var btn = document.createElement("button");
+            btn.className = "opt-btn";
+            btn.innerText = opt;
+            btn.onclick = function() {
+                if (idx === s.quiz.correctIndex) {
+                    updateScore(20);
+                    recordAnswer(true);
+                    alert("Harika! Metni başarıyla anladınız (+20 Puan)");
+                    nextQuestion();
+                } else {
+                    updateScore(-5);
+                    recordAnswer(false);
+                    alert("Yanlış cevap (-5 Puan). Metni tekrar inceleyin.");
+                }
+            };
+            optionsGrid.appendChild(btn);
+        });
+
+        quizBox.appendChild(hintBtn);
+        quizBox.appendChild(quizTitle);
+        quizBox.appendChild(hintBox);
+        quizBox.appendChild(question);
+        quizBox.appendChild(optionsGrid);
+
+        container.appendChild(storyBox);
+        container.appendChild(notesSection);
+        container.appendChild(quizBox);
+
+        gameArea.appendChild(container);
+
+        document.onclick = function() {
+            document.querySelectorAll('.clickable-word').forEach(function(el) {
+                el.classList.remove('active-word');
+            });
+        };
+
+        var noteTextarea = document.getElementById("storyNote");
+        if (noteTextarea) {
+            noteTextarea.oninput = function() {
+                if (!currentUserId || !usersData[currentUserId]) return;
+                if (!usersData[currentUserId].notes) usersData[currentUserId].notes = [];
+
+                var noteContent = "[" + s.id + "] " + noteTextarea.value.trim();
+                var existingIndex = usersData[currentUserId].notes.findIndex(n => n.startsWith("[" + s.id + "]"));
+
+                if (existingIndex !== -1) {
+                    if (noteTextarea.value.trim() === "") usersData[currentUserId].notes.splice(existingIndex, 1);
+                    else usersData[currentUserId].notes[existingIndex] = noteContent;
+                } else if (noteTextarea.value.trim() !== "") {
+                    usersData[currentUserId].notes.push(noteContent);
+                }
+
+                localStorage.setItem('usersData', JSON.stringify(usersData));
+                var status = document.getElementById("saveStatus");
+                status.innerText = "Kaydedildi...";
+                setTimeout(function() { status.innerText = ""; }, 1500);
+            };
+        }
+    }
+</script>
+
+</body>
+</html>
