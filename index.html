@@ -1086,7 +1086,7 @@
         <button class="mode-btn active" onclick="switchMode('matching_tr', event)">Arapça-Türkçe Eşleştirme</button>
         <button class="mode-btn" onclick="switchMode('matching_syn', event)">Eş Anlamlı Kelimeler</button>
         <button class="mode-btn" onclick="switchMode('matching_ant', event)">Zıt Anlamlı Kelimeler</button>
-        <button class="mode-btn" onclick="switchMode('puzzle', event)">Bulmaca</button>
+        <button class="mode-btn" onclick="switchMode('puzzle', event)" style="background: #f59e0b; color: white;">🧩 Zenginleştirilmiş Bulmaca</button>
         <button class="mode-btn" onclick="switchMode('completion', event)">Cümle Tamamlama</button>
         <button class="mode-btn" onclick="switchMode('sentence', event)">Cümle Kurma</button>
         <button class="mode-btn" onclick="switchMode('dictation', event)">Sesli Dikte</button>
@@ -1156,32 +1156,38 @@
 
     var puzzleDatabase = {
         1: [
+            { type: "wordfind", title: "🌟 A1 Yeni Kelime Bulma Bulmacası", prompt: "Verilen Türkçe anlamı bulmak için doğru Arapça harf kombinasyonunu seçin:", ar: "قلم", tr: "Kalem (Yazı aracı)", options: ["قلم", "شمس", "ماء", "بيت"], hint: "Yazı yazmak için kullanılan nesne." },
             { icon: "☀️", word: "شمس", tr: "Güneş", hint: "Gündüzleri parlayan ısı ve ışık kaynağı." },
             { icon: "🍎", word: "تفاح", tr: "Elma", hint: "Kırmızı veya yeşil tatlı meyve." },
             { icon: "📖", word: "كتاب", tr: "Kitap", hint: "Okumak için sayfaları olan nesne." },
-            { icon: "✏️", word: "قلم", tr: "Kalem", hint: "Yazı yazmak için kullanılan araç." }
+            { type: "crossword", title: "A1 Çengel Bulmaca Ekstra", hints: ["1. Su (ماء)", "2. Ev (بيت)"], grid: [['م', 'ا', 'ء', '■'], ['ب', 'ي', 'ت', '■']], solution: ["ماء", "بيت"], hintDetail: "1. İçilen sıvı <br> 2. Yaşanan yer" }
         ],
         2: [
+            { type: "wordfind", title: "🌟 A2 Yeni Kelime Bulma Bulmacası", prompt: "Ulaşımda kullanılan 4 tekerlekli aracın Arapçası nedir?", ar: "سيارة", tr: "Araba", options: ["سيارة", "طائرة", "بيت", "سمك"], hint: "Tekerlekli kara taşıtı." },
             { icon: "🚗", word: "سيارة", tr: "Araba", hint: "Ulaşımda kullanılan 4 tekerlekli araç." },
             { icon: "🏠", word: "بيت", tr: "Ev", hint: "İçinde yaşadığımız barınak." },
             { icon: "🐟", word: "سمك", tr: "Balık", hint: "Suda yaşayan yüzgeçli canlı." },
-            { icon: "✈️", word: "طائرة", tr: "Uçak", hint: "Gökyüzünde uçan ulaşım aracı." }
+            { type: "crossword", title: "A2 Çengel Bulmaca Ekstra", hints: ["1. Okul (مدرسة)", "2. Kapı (باب)"], grid: [['م', 'د', 'ر', 'س', 'ة'], ['ب', 'ا', 'ب', '■', '■']], solution: ["مدرسة", "باب"], hintDetail: "1. Eğitim yuvası <br> 2. Giriş kapısı" }
         ],
         3: [
+            { type: "wordfind", title: "🌟 B1 Yeni Kelime Bulma Bulmacası", prompt: "'Çalışkanlık / Azim' kelimesinin Arapçadaki karşılığı nedir?", ar: "اجتهاد", tr: "Çalışkanlık", options: ["اجتهاد", "صبر", "عدل", "شجاعة"], hint: "Başarı için harcanan gayret." },
             { type: "crossword", title: "B1 Çengel Bulmaca 1", hints: ["1. İlim öğrenen kişi (طالب)", "2. Başarının anahtarı (اجتهاد)"], grid: [['ط', 'ا', 'ل', 'ب', '■'], ['ا', 'ج', 'ت', 'ه', 'ا']], solution: ["طالب", "اجتهاد"], hintDetail: "1. Öğrenci <br> 2. Çalışkanlık" },
-            { type: "crossword", title: "B1 Çengel Bulmaca 2", hints: ["1. Sabır (صبر)", "2. Adalet (عدل)"], grid: [['ص', 'ب', 'ر', '■'], ['ع', 'د', 'ل', '■']], solution: ["صبر", "عدل"], hintDetail: "1. Sabır <br> 2. Adalet" }
+            { type: "crossword", title: "B1 Çengel Bulmaca Ekstra", hints: ["1. Akıl (عقل)", "2. Kalp (قلب)"], grid: [['ع', 'ق', 'ل', '■'], ['ق', 'ل', 'ب', '■']], solution: ["عقل", "قلب"], hintDetail: "1. Düşünme organı <br> 2. Duygu merkezi" }
         ],
         4: [
+            { type: "wordfind", title: "🌟 B2 Yeni Kelime Bulma Bulmacası", prompt: "'İyimserlik' anlamındaki kelimeyi seçin:", ar: "تفاؤل", tr: "İyimserlik", options: ["تفاؤل", "حكمة", "ازدهار", "أمل"], hint: "Geleceğe umutla bakma durumu." },
             { type: "crossword", title: "B2 Çengel Bulmaca 1", hints: ["1. İyimserlik (تفاؤل)", "2. Bilgelik (حكمة)"], grid: [['ت', 'ف', 'ا', 'ؤ', 'ل'], ['■', 'ح', 'ك', 'م', 'ة']], solution: ["تفاؤل", "حكمة"], hintDetail: "1. İyimserlik <br> 2. Hikmet" },
-            { type: "crossword", title: "B2 Çengel Bulmaca 2", hints: ["1. İlerleme/Refah (ازدهار)", "2. Umut (أمل)"], grid: [['ا', 'ز', 'د', 'ه', 'ا'], ['أ', 'م', 'ل', '■', '■']], solution: ["ازدهار", "أمل"], hintDetail: "1. Refah <br> 2. Umut" }
+            { type: "crossword", title: "B2 Çengel Bulmaca Ekstra", hints: ["1. Barış (سلام)", "2. Başarı (نجاح)"], grid: [['س', 'ل', 'ا', 'م', '■'], ['ن', 'ج', 'ا', 'ح', '■']], solution: ["سلام", "نجاح"], hintDetail: "1. Barış <br> 2. Başarı" }
         ],
         5: [
+            { type: "wordfind", title: "🌟 C1 Yeni Kelime Bulma Bulmacası", prompt: "'İstikrar / Denge' anlamını veren ifadeyi seçin:", ar: "استقرار", tr: "İstikrar", options: ["استقرار", "نزاهة", "مرونة", "إيجاز"], hint: "Düzen ve kalıcılık hali." },
             { type: "crossword", title: "C1 Çengel Bulmaca 1", hints: ["1. İstikrar (استقرار)", "2. Erdem (نزاهة)"], grid: [['ا', 'س', 'ت', 'ق', 'ر'], ['■', 'ن', 'ز', 'ا', 'ه']], solution: ["استقرار", "نزاهة"], hintDetail: "1. İstikrar <br> 2. Dürüstlük" },
-            { type: "crossword", title: "C1 Çengel Bulmaca 2", hints: ["1. Esneklik (مرونة)", "2. Özet (إيجاز)"], grid: [['م', 'ر', 'و', 'ن', 'ة'], ['إ', 'ي', 'ج', 'ا', 'ز']], solution: ["مرونة", "إيجاز"], hintDetail: "1. Esneklik <br> 2. Özet" }
+            { type: "crossword", title: "C1 Çengel Bulmaca Ekstra", hints: ["1. Denge (توازن)", "2. Kalite (جودة)"], grid: [['ت', 'و', 'ا', 'ز', 'ن'], ['ج', 'و', 'د', 'ة', '■']], solution: ["توازن", "جودة"], hintDetail: "1. Denge <br> 2. Nitelik" }
         ],
         6: [
+            { type: "wordfind", title: "🌟 C2 Yeni Kelime Bulma Bulmacası", prompt: "'Zirve / Coşku' anlamına gelen kelimeyi bulun:", ar: "عنفوان", tr: "Zirve/Coşku", options: ["عنفوان", "سمو", "سجية", "محاكاة"], hint: "En parlak ve güçlü dönem." },
             { type: "crossword", title: "C2 Çengel Bulmaca 1", hints: ["1. Zirve/Coşku (عنفوان)", "2. Yücelik (سمو)"], grid: [['ع', 'ن', 'ف', 'و', 'ا'], ['■', '■', 'س', 'م', 'و']], solution: ["عنفوان", "سمو"], hintDetail: "1. Coşku <br> 2. Yücelik" },
-            { type: "crossword", title: "C2 Çengel Bulmaca 2", hints: ["1. Mizaç (سجية)", "2. Taklit/Öykünme (محاكاة)"], grid: [['س', 'ج', 'ي', 'ة', '■'], ['م', 'ح', 'ا', 'ك', 'ا']], solution: ["سجية", "محاكاة"], hintDetail: "1. Mizaç <br> 2. Öykünme" }
+            { type: "crossword", title: "C2 Çengel Bulmaca Ekstra", hints: ["1. İhtişam (رواء)", "2. Derinlik (عمق)"], grid: [['ر', 'و', 'ا', 'ء', '■'], ['ع', 'م', 'ق', '■', '■']], solution: ["رواء", "عمق"], hintDetail: "1. Parlaklık/İhtişam <br> 2. Derinlik" }
         ]
     };
 
@@ -1189,7 +1195,7 @@
         1: [
             { sentence: "الْجَوُّ ...... وَالشَّمْسُ مُشْرِقَةٌ.", options: ["حَارٌّ", "بَارِدٌ", "مُظْلِمٌ", "سَرِيعٌ"], correct: "حَارٌّ", tr: "Hava sıcak ve güneş parlıyor.", hint: "Havanın durumunu ifade eden sıfat." },
             { sentence: "الْقِطَّةُ تَشْرَبُ ...... فِي الْمَطْبَخِ.", options: ["الْحَلِيبَ", "الْخُبْزَ", "القَلَمَ", "الْكُرَةَ"], correct: "الْحَلِيبَ", tr: "Kedi mutfakta süt içiyor.", hint: "Kedilerin sevdiği sıvı içecek." },
-            { sentence: "يَأْكُلُ الطَِّفْلُ ...... اللَّذِيذَةَ.", options: ["التُّفَّاحَةَ", "الْكِتَابَ", "الشَّمْسَ", "الْبَابَ"], correct: "التُّفَّاحَةَ", tr: "Çocuk lezzetli elmayı yiyor.", hint: "Yenilebilen kırmızı/yeşil meyve." }
+            { sentence: "يَأْكُلُ الطَِّفْلُ ...... اللَّذِيذَةَ.", options: ["التُّفَّاحَةَ", "الْكِتَابَ", "الشَّمْسَ", "الْبَابَ"], correct: "التُّفَّاحَةَ", tr: "Çocuk lezzetli elmayı yiyor.", hint: "Yenilebilen kırmızı/yeşil meyve." }
         ],
         2: [
             { sentence: "يَذْهَبُ الطَّالِبُ ...... إِلَى الْمَدْرَسَةِ.", options: ["مُبَكِّرًا", "مُتَأَخِّرًا", "طَوِيلًا", "بَعِيدًا"], correct: "مُبَكِّرًا", tr: "Öğrenci okula erkenden gider.", hint: "Erken gitmeyi belirten zarf." },
@@ -1204,7 +1210,7 @@
         4: [
             { sentence: "التَّفَاؤُلُ يَمْنَحُ الإِنْسَانَ ...... لِمُوَاجَهَةِ الصِّعَابِ.", options: ["قُوَّةً", "خَوْفًا", "كَسَلًا", "تَرَدُّدًا"], correct: "قُوَّةً", tr: "İyimserlik insana güç verir.", hint: "Zorlukları aşmak için gereken enerji." },
             { sentence: "تَطَوُّرُ الذَّكَاءِ الاصْطِنَاعِيِّ يُغَيِّرُ سُوقَ ...... .", options: ["العَمَلِ", "النَّوْمِ", "الْسَفَرِ", "الأَكْلِ"], correct: "العَمَلِ", tr: "Yapay zekanın gelişimi iş piyasasını değiştiriyor.", hint: "Meslekler ve istihdam dünyası." },
-            { sentence: "التَّنَوُّعُ الثَّقَافِيُّ يُعَزِّزُ ...... بَيْنَ الشُّعُوبِ.", options: ["التَّسَامُحَ", "النزَاعَ", "الْكَرَهَ", "الْجَهْلَ"], correct: "التَّسَامُحَ", tr: "Kültürel çeşitlilik halklar arasında hoşgörüü güçlendirir.", hint: "Anlayış ve hoşgörü kavramı." }
+            { sentence: "التَّنَوُّعُ الثَّقَافِيُّ يُعَزِّزُ ...... بَيْنَ الشُّعُوبِ.", options: ["التَّسَامُحَ", "النزَاعَ", "الْكَرَهَ", "الْجَهْلَ"], correct: "التَّسَامُحَ", tr: "Kültürel çeşitlilik halklar arasında hoşgörüyü güçlendirir.", hint: "Anlayış ve hoşgörü kavramı." }
         ],
         5: [
             { sentence: "تَسْعَى الدُّوَلُ إِلَى تَحْقِيقِ ...... الاِقْتِصَادِيِّ.", options: ["الاِسْتِقْرَارِ", "الاضْطِرَابِ", "الفَسَادِ", "الجهْلِ"], correct: "الاِسْتِقْرَارِ", tr: "Ülkeler ekonomik istikrarı sağlamaya çalışır.", hint: "Denge ve düzen anlamındaki kelime." },
@@ -1246,7 +1252,7 @@
         ],
         6: [
             { words: ["تَعْكِسُ", "الأَدَبِيَّاتُ", "سَجِيَّةَ", "الشُّعُوبِ", "الأَصِيلَةَ"], correct: "تَعْكِسُ الأَدَبِيَّاتُ سَجِيَّةَ الشُّعُوبِ الأَصِيلَةَ", tr: "Edebiyat halkların özgün mizacını yansıtır.", hint: "Edebiyat ve halk kimliği." },
-            { words: ["تَتَجَلَّى", "بَلاغَةُ", "اللُّغَةِ", "فِي", "عُنْفُوانِ", "التَّعْبِيرِ"], correct: "تَتَجَلَّى بَلاغَةُ اللُّغَةِ فِي عُنْفُوانِ التَّعْبِيرِ", tr: "Dilin belagatı edebi ifadenin coşkusunda tecelli eder.", hint: "Arapça estetik ve belagatu." },
+            { words: ["تَتَجَلَّى", "بَلاغَةُ", "اللُّغَةِ", "فِي", "عُنْفُوانِ", "التَّعْبِيرِ"], correct: "تَتَجَلَّى بَلاغَةُ اللُّغَةِ فِي عُنْفُوانِ التَّعْبِيرِ", tr: "Dilin belagatı edebi ifadenin coşkusunda tecelli eder.", hint: "Arapça estetik ve belagat." },
             { words: ["يَدْرُسُ", "عِلْمُ", "الكونِيَّاتِ", "نَشْأَةَ", "الكَوْنِ"], correct: "يَدْرُسُ عِلْمُ الكونِيَّاتِ نَشْأَةَ الكَوْنِ", tr: "Kozmoloji evrenin oluşumunu inceler.", hint: "Evren bilimi araştırması." }
         ]
     };
@@ -1955,17 +1961,14 @@
         var fileName = (fileObj.name || "").toLowerCase();
         var fileType = (fileObj.type || "").toLowerCase();
 
-        // 1. Resim dosyaları
         if (fileType.includes('image') || fileName.endsWith('.png') || fileName.endsWith('.jpg') || fileName.endsWith('.jpeg') || fileName.endsWith('.webp') || fileName.endsWith('.gif')) {
             previewEl.innerHTML = `<img src="${fileObj.dataUrl}" style="max-width: 100%; max-height: 100%; object-fit: contain;">`;
         } 
-        // 2. PDF dosyaları
         else if (fileType.includes('pdf') || fileName.endsWith('.pdf')) {
             previewEl.innerHTML = `<object data="${fileObj.dataUrl}" type="application/pdf" width="100%" height="100%">
                 <div style="padding: 20px;">Tarayıcınız PDF önizlemesini doğrudan desteklemiyor. Dosyayı görüntülemek için <a href="${fileObj.dataUrl}" download="${fileObj.name}" style="color:#0284c7; font-weight:bold;">buraya tıklayarak indirebilirsiniz</a>.</div>
             </object>`;
         } 
-        // 3. Metin dosyaları (.txt, .csv, .html vb.)
         else if (fileType.includes('text') || fileName.endsWith('.txt') || fileName.endsWith('.csv') || fileName.endsWith('.json') || fileName.endsWith('.html')) {
             try {
                 var base64Data = fileObj.dataUrl.split(',')[1];
@@ -1975,10 +1978,9 @@
                 previewEl.innerHTML = `<iframe src="${fileObj.dataUrl}" style="width:100%; height:100%; border:none; background:white;"></iframe>`;
             }
         } 
-        // 4. Diğer tüm uzantılar (Word .doc, .docx, Excel .xls, .xlsx, sunumlar ve diğer tüm dosyalar)
         else {
             previewEl.innerHTML = `
-                <div style="display: flex; flexDirection: column; align-items: center; justify-content: center; gap: 15px; padding: 30px; width: 100%; height: 100%; background: #ffffff;">
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; padding: 30px; width: 100%; height: 100%; background: #ffffff;">
                     <div style="font-size: 3rem;">📦</div>
                     <h3 style="margin: 0; color: var(--primary);">Dosya Yüklendi ve Hazır: ${fileObj.name}</h3>
                     <p style="color: #64748b; font-size: 0.95rem; max-width: 450px; line-height: 1.5; margin: 0;">
@@ -1999,7 +2001,6 @@
         document.getElementById('fileViewerModal').style.display = 'none';
     }
 
-    // Çizim / Kalem Fonksiyonları
     function initCanvasDrawing() {
         var canvas = document.getElementById('pdfCanvas');
         if (!canvas) return;
@@ -2205,7 +2206,64 @@
         var pool = puzzleDatabase[currentLevel] || puzzleDatabase[1];
         var q = pool[currentQuestionIndex % pool.length];
 
-        if (currentLevel <= 2) {
+        if (q.type === "wordfind") {
+            var instruction = document.createElement("div");
+            instruction.className = "instruction-box";
+            instruction.innerText = q.title + " (" + (currentQuestionIndex + 1) + "/" + pool.length + ")";
+
+            var hintBox = document.createElement("div");
+            hintBox.className = "hint-box";
+            hintBox.id = "hintBox";
+            hintBox.innerHTML = "<strong>💡 Detaylı İpucu:</strong><br>" + q.hint;
+
+            var hintBtn = document.createElement("button");
+            hintBtn.className = "hint-btn";
+            hintBtn.innerHTML = "💡 İpucu";
+            hintBtn.onclick = toggleHint;
+
+            var promptDiv = document.createElement("div");
+            promptDiv.style.fontSize = "1.2rem";
+            promptDiv.style.fontWeight = "bold";
+            promptDiv.style.margin = "15px 0";
+            promptDiv.style.textAlign = "center";
+            promptDiv.innerText = q.prompt;
+
+            var targetText = document.createElement("div");
+            targetText.style.fontSize = "1.5rem";
+            targetText.style.color = "#c2410c";
+            targetText.style.marginBottom = "15px";
+            targetText.innerText = "Anlam: " + q.tr;
+
+            var optionsGrid = document.createElement("div");
+            optionsGrid.className = "options-grid";
+
+            var shuffledOpts = q.options.slice().sort(function() { return 0.5 - Math.random(); });
+            shuffledOpts.forEach(function(opt) {
+                var btn = document.createElement("button");
+                btn.className = "opt-btn";
+                btn.innerText = opt;
+                btn.onclick = function() {
+                    if (opt === q.ar) {
+                        updateScore(15);
+                        recordAnswer(true);
+                        alert("Harika! Doğru kelimeyi buldunuz (+15 Puan)");
+                        nextQuestion();
+                    } else {
+                        updateScore(-5);
+                        recordAnswer(false);
+                        alert("Yanlış seçenek (-5 Puan). Tekrar deneyin.");
+                    }
+                };
+                optionsGrid.appendChild(btn);
+            });
+
+            card.appendChild(hintBtn);
+            card.appendChild(instruction);
+            card.appendChild(hintBox);
+            card.appendChild(promptDiv);
+            card.appendChild(targetText);
+            card.appendChild(optionsGrid);
+        } else if (q.icon) {
             var instruction = document.createElement("div");
             instruction.className = "instruction-box";
             instruction.innerText = "Görsele Ait Arapça Kelimeyi Yazın (" + (currentQuestionIndex + 1) + "/" + pool.length + ")";
